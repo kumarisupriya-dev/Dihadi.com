@@ -1,1 +1,1 @@
-# Dihadi.com
+This is an Errands earning app.
