@@ -1,12 +1,36 @@
-import {Briefcase} from "lucide-react";
+import {BrowserRouter as Router, Routes, Route, Navigate} from 'react-router-dom';
+import {AuthProvider} from './context/Authcontext';
+import {ProtectedRoute} from './component/ProtectedRoute';
+import {Navbar} from './component/Navbar';
+import {Login} from './pages/Login';
+import {Signup} from './pages/Signup';
+import {Dashboard} from './pages/Dashboard';
 
-function App(){
-  return (
-      <div className="flex flex-col items-center justify-center min-h-screen gap-4">
-        <Briefcase className="w-16 h-16 text-brand-500 animate-bounce"/>
-        <h1 className="text-4xl font-black tracking-tight text-white">Dihadi.com</h1>
-        <p className="text-slate-400 text-lg">Your Errands, Your Earnings.</p>
-      </div>
-  );
+function App() {
+    return (
+        <AuthProvider>
+            <Router>
+                <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col">
+                    <Navbar />
+                    <main className="flex-grow">
+                        <Routes>
+                            <Route path="/login" element={<Login />} />
+                            <Route path="/signup" element={<Signup />}/>
+                            <Route
+                            path="/"
+                            element={
+                                <ProtectedRoute>
+                                    <Dashboard />
+                                </ProtectedRoute>
+                            }
+                            />
+                            <Route path="*" element={<Navigate to="/" replace />}/>
+                        </Routes>
+                    </main>
+                </div>
+            </Router>
+        </AuthProvider>
+    );
 }
+
 export default App;
