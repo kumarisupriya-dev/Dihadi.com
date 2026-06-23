@@ -4,6 +4,7 @@ import cors from 'cors';
 import helmet from 'helmet';
 import dotenv from 'dotenv';
 import authRoutes from './routes/auth';
+import taskRoutes from './routes/tasks';
 
 dotenv.config();
 
@@ -14,6 +15,7 @@ const MONGO_URI = process.env.MONGO_URI || 'mongodb://127.0.0.1:27017/dihadi';
 app.use(express.json());
 app.use(cors({origin: 'http://localhost:5174'}));
 app.use(helmet());
+app.use('/api/tasks', taskRoutes);
 
 app.get('/api/health', (req: Request, res:Response)=> {
     res.json({status: 'ok', message: 'Dihadi.com Backend Server is running smoothly!'});
