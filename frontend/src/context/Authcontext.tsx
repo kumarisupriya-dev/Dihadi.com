@@ -24,7 +24,7 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export const AuthProvider: React.FC<{children: React.ReactNode}> = ({ children }) => {
     const [user, setUser] = useState<User | null>(null);
     const [token, setToken] = useState<string | null>(localStorage.getItem('dihadi_token'));
-    const [currentRole, setCurrentRole] = useState<UserRole>((localStorage.getItem('diahdi_role') as UserRole) || 'client');
+    const [currentRole, setCurrentRole] = useState<UserRole>((localStorage.getItem('dihadi_role') as UserRole) || 'client');
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
@@ -37,13 +37,14 @@ export const AuthProvider: React.FC<{children: React.ReactNode}> = ({ children }
                     });
                     if (res.ok) {
                         const data = await res.json();
+                        const dbUser = data.user;
                         setUser({
-                            id: data._id,
-                            name: data.name,
-                            email: data.email,
-                            walletBalance: data.walletBalance,
-                            location: data.location,
-                            isVerified: data.isVerified
+                            id: dbUser._id,
+                            name: dbUser.name,
+                            email: dbUser.email,
+                            walletBalance: dbUser.walletBalance ?? 0,
+                            location: dbUser.location,
+                            isVerified: dbUser.isVerified
                         });
                     } else {
                         logout();
@@ -58,17 +59,17 @@ export const AuthProvider: React.FC<{children: React.ReactNode}> = ({ children }
     }, [token]);
 
     const login = (newToken: string, newUser: User) => {
-        localStorage.setItem('diahdi_token', newToken);
+        localStorage.setItem('dihadi_token', newToken);
         setToken(newToken);
         setUser(newUser);
     };
     const signup = (newToken: string, newUser: User) => {
-        localStorage.setItem('diahdi_token', newToken);
+        localStorage.setItem('dihadi_token', newToken);
         setToken(newToken);
         setUser(newUser);
     };
     const logout = () => {
-        localStorage.removeItem('diahdi_token');
+        localStorage.removeItem('dihadi_token');
         setToken(null);
         setUser(null);
     };
@@ -87,13 +88,14 @@ export const AuthProvider: React.FC<{children: React.ReactNode}> = ({ children }
                 });
                 if (res.ok) {
                     const data = await res.json();
+                    const dbUser = data.user;
                     setUser({
-                        id: data._id,
-                        name: data.name,
-                        email: data.email,
-                        walletBalance: data.walletBalance,
-                        location: data.location,
-                        isVerified: data.isVerified
+                        id: dbUser._id,
+                        name: dbUser.name,
+                        email: dbUser.email,
+                        walletBalance: dbUser.walletBalance ?? 0,
+                        location: dbUser.location,
+                        isVerified: dbUser.isVerified
                     });
                 }
             } catch (err) {

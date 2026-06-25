@@ -5,6 +5,7 @@ import {Navbar} from './component/Navbar';
 import {Login} from './pages/Login';
 import {Signup} from './pages/Signup';
 import {Dashboard} from './pages/Dashboard';
+import {PostTask} from './pages/PostTask';
 
 function App() {
     return (
@@ -21,6 +22,14 @@ function App() {
                             element={
                                 <ProtectedRoute>
                                     <Dashboard />
+                                </ProtectedRoute>
+                            }
+                            />
+                            <Route
+                            path="/post-task"
+                            element={
+                                <ProtectedRoute>
+                                    <PostTask/>
                                 </ProtectedRoute>
                             }
                             />

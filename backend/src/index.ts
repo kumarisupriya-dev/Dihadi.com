@@ -13,8 +13,9 @@ const PORT = process.env.PORT || 5000;
 const MONGO_URI = process.env.MONGO_URI || 'mongodb://127.0.0.1:27017/dihadi';
 
 app.use(express.json());
-app.use(cors({origin: 'http://localhost:5174'}));
+app.use(cors({origin: ['http://localhost:5173' ,'http://localhost:5174']}));
 app.use(helmet());
+app.use('/api/auth', authRoutes);
 app.use('/api/tasks', taskRoutes);
 
 app.get('/api/health', (req: Request, res:Response)=> {
