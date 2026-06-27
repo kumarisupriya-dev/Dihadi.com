@@ -11,7 +11,7 @@ Promise<void> => {
             res.status(400).json({error: 'Please enter all required fields, including location.'});
             return;
         }
-        if (coordinates.length !==2 || typeof coordinates[0] === 'number' || typeof coordinates[1] === 'number') {
+        if (coordinates.length !==2 || typeof coordinates[0] !== 'number' || typeof coordinates[1] !== 'number') {
             res.status(400).json({error: 'Invalid location coordinates. Must be [longitude, latitude].'});
             return;
         }
@@ -47,7 +47,7 @@ router.get('/', authMiddleware, async (req: AuthRequest, res: Response):
         if (lat && lng) {
             const radiusInKm = parseFloat(radius as string) || 10;
             const distanceInMeters = radiusInKm * 1000;
-            query.location = {
+            query['location.coordinates'] = {
                 $near: {
                     $geometry: {
                         type: 'Point',
@@ -65,7 +65,7 @@ router.get('/', authMiddleware, async (req: AuthRequest, res: Response):
     }
     });
 
-router.get('/:id', authMiddleware, async (req: AuthRequest, res: Response):
+router.get('/my-posts', authMiddleware, async (req: AuthRequest, res: Response):
 Promise<void> => {
     try {
         const tasks = await Task.find({client: req.userId}).sort({createdAt: -1});

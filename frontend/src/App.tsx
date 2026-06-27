@@ -6,6 +6,7 @@ import {Login} from './pages/Login';
 import {Signup} from './pages/Signup';
 import {Dashboard} from './pages/Dashboard';
 import {PostTask} from './pages/PostTask';
+import {ExploreTasks} from './pages/ExploreTasks';
 
 function App() {
     return (
@@ -29,7 +30,15 @@ function App() {
                             path="/post-task"
                             element={
                                 <ProtectedRoute>
-                                    <PostTask/>
+                                    <PostTask />
+                                </ProtectedRoute>
+                            }
+                            />
+                            <Route
+                            path="/explore"
+                            element={
+                                <ProtectedRoute>
+                                    <ExploreTasks />
                                 </ProtectedRoute>
                             }
                             />
