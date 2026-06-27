@@ -5,6 +5,7 @@ import helmet from 'helmet';
 import dotenv from 'dotenv';
 import authRoutes from './routes/auth';
 import taskRoutes from './routes/tasks';
+import bidRoutes from './routes/bids';
 
 dotenv.config();
 
@@ -17,6 +18,7 @@ app.use(cors({origin: ['http://localhost:5173' ,'http://localhost:5174']}));
 app.use(helmet());
 app.use('/api/auth', authRoutes);
 app.use('/api/tasks', taskRoutes);
+app.use('/api/bids', bidRoutes);
 
 app.get('/api/health', (req: Request, res:Response)=> {
     res.json({status: 'ok', message: 'Dihadi.com Backend Server is running smoothly!'});
