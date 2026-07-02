@@ -1,6 +1,8 @@
 import {Router, Response} from 'express';
 import Task from '../models/Task';
 import {authMiddleware, AuthRequest} from '../middleware/auth';
+import User from '../models/User';
+import Transaction from '../models/Transaction';
 
 const router = Router();
 router.post('/', authMiddleware, async (req: AuthRequest, res: Response):
@@ -103,5 +105,54 @@ Promise<void> => {
         res.status(500).json({error: 'Server error fetching tasks details'});
     }
 });
+
+router.post('/:id/complete', authMiddleware, async (req: AuthRequest, res: Response):
+Promise<void> => {
+    try {
+        const task = await Task.findById(req.params.id);
+        if (!task) {
+            res.status(404).json({error: 'Task not found.'});
+            return;
+        }
+        if (task.client.toString() !== req.userId) {
+            res.status(403).json({error: 'Not authorized to complete this task.'});
+            return;
+        }
+        if (task.status !== 'assigned') {
+            res.status(400).json({error: 'Task must be in assigned state to be completed.'});
+            return;
+        }
+        if (!task.assignedTasker) {
+            res.status(400).json({error: 'No tasker is assigned to this task.'});
+            return;
+        }
+        const tasker = await User.findById(task.assignedTasker);
+        if (!tasker) {
+            res.status(404).json({error: 'Assigned tasker not found.'});
+            return;
+        }
+        const releaseAmount = task.escrowAmount;
+        tasker.walletBalance += releaseAmount;
+        await tasker.save();
+
+        task.status ='completed';
+        await task.save();
+
+        const taskerTx = new Transaction({
+            user: tasker._id,
+            amount: releaseAmount,
+            type: 'payment_received',
+            task: task._id,
+            description: `Received payment for completing errand: "${task.title}"`
+        });
+        await taskerTx.save();
+
+        res.json({message: 'Task marked completed and payment released to tasker!', task});
+    } catch (error) {
+        console.error('Complete task error:', error);
+        res.status(500).json({error:'Server error marking task completed.'});
+    }
+});
+
 
 export default router;

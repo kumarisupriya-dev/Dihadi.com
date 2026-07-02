@@ -3,6 +3,8 @@ import Bid from '../models/Bid';
 import Task from '../models/Task';
 import {authMiddleware, AuthRequest} from '../middleware/auth';
 import Auth from "./auth";
+import User from '../models/User';
+import Transaction from '../models/Transaction';
 
 const router = Router();
 
@@ -94,20 +96,43 @@ Promise<void> => {
             res.status(400).json({error: 'This task is no longer open for hire.'});
             return;
         }
+        const client = await User.findById(req.userId);
+        if (!client) {
+            res.status(404).json({error: 'Client profile not found.'});
+            return;
+        }
+        if (client.walletBalance < bid.bidAmount) {
+            res.status(400).json({error: `Insufficient wallet balance. You need ₹${bid.bidAmount} but only have ₹${client.walletBalance.toFixed(2)}. Please add funds to your wallet.`});
+            return;
+        }
         bid.status = 'accepted';
         await bid.save();
 
         await Bid.updateMany(
-            {task: task._id, id: {$ne: bid._id} },
+            {task: task._id, _id: {$ne: bid._id}},
             {status: 'rejected'}
         );
+        client.walletBalance -= bid.bidAmount;
+        await client.save();
+
         task.status = 'assigned';
         task.assignedTasker = bid.tasker;
+        task.escrowAmount = bid.bidAmount;
         await task.save();
-        res.json({message: 'Bid accepted successfully and tasker assigned!', task, bid});
+
+        const transaction = new Transaction({
+            user: client._id,
+            amount: -bid.bidAmount,
+            type:'escrow_lock',
+            task: task._id,
+            description: `Funds locked in escrow for errand: "${task.title}"`
+        });
+        await transaction.save();
+
+        res.json({message: 'Bid accepted, payment locked in escrow, and tasker hired!,task, bid'});
     } catch (error) {
         console.error('Accept bid error:', error);
-        res.status(500).json({error: 'Server error accepting bid.'});
+        res.status(500).json({error: 'server error accepting bid.'});
     }
 });
 
