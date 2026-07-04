@@ -19,7 +19,10 @@ export const Navbar: React.FC = () => {
                 {/* Middle Switch and Wallet */}
                 <div className="flex items-center gap-6">
                     {/* Wallet Balance Display */}
-                    <div className="flex items-center gap-2 bg-slate-800/60 border border-slate-700/50 rounded-xl px-4 py-1.5 shadow-inner">
+                    <div
+                    onClick={() => navigate('/wallet')}
+                    className="flex items-center gap-2 bg-slate-800/60 hover:bg-slate-800 border border-slate-700/50 hover:border-emerald-500/30 rounded-xl px-4 py-1.5 shadow-inner cursor-pointer transition-all duration-200"
+                    >
                         <Wallet className="w-5 h-5 text-emerald-400"/>
                         <span className="font-semibold text-slate-200">₹{(user.walletBalance ?? 0).toFixed(2)}</span>
                     </div>

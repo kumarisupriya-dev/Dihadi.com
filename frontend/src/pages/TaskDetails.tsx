@@ -44,7 +44,7 @@ interface Bid {
 
 export const TaskDetails: React.FC = () => {
     const {id} = useParams<{ id: string }>();
-    const {user} = useAuth();
+    const {user, refreshUser} = useAuth();
     const navigate = useNavigate();
     const [task, setTask] = useState<Task | null>(null);
     const [bids, setBids] = useState<Bid[]>([]);
@@ -216,47 +216,78 @@ export const TaskDetails: React.FC = () => {
                 {/* Client View */}
                 {isOwner && (
                     <div className="bg-slate-900 border border-slate-800 rounded-3xl p-6 shadow-xl space-y-6">
-                        <h3 className="text-xl font-bold text-white">Received Bids({bids.length}</h3>
-                        {bids.length === 0 ? (
-                            <p className="text-slate-450 text-sm text-center py-6 border border-dashed border-slate-800 rounded-2xl">
-                                No bids received yet. Taskers will place offers soon.
-                            </p>
-                        ) : (
-                            <div className="space-y-4 max-h-[400px] overflow-y-auto pr-1">
-                                {bids.map((bid) => (
-                                    <div key={bid._id} className="bg-slate-950/40 border border-slate-850 p-4 rounded-2xl flex flex-col gap-3">
-                                        <div className="flex items-center justify-between">
-                                            <div>
-                                                <span className="font-semibold text-white text-sm flex items-center gap-1">
-                                                    {bid.tasker.name}
-                                                    {bid.tasker.isVerified && <ShieldCheck className="w-4 h-4 text-emerald-450"/>}
-                                                </span>
-                                                <span className="text-[10px] text-slate-450">
-                                                    {bid.tasker.rating > 0 ? `★ ${bid.tasker.rating.toFixed(1)}` : 'New Tasker'}
-                                                </span>
-                                            </div>
-                                            <span className="text-emerald-450 font-black text-sm">₹{bid.bidAmount}</span>
-                                        </div>
-                                        {bid.message && (
-                                            <p className="text-xs text-slate-400 bg-slate-950/80 p-2.5 rounded-xl border border-slate-850 italic">
-                                                "{bid.message}"
-                                            </p>
-                                        )}
-                                        <div className="flex items-center gap-2 text-[10px] text-slate-455">
-                                            <Clock className="w-3.5 h-3.5"/>
-                                            <span>Ready in: {bid.estimatedTime}</span>
-                                        </div>
-                                        {task.status === 'open' && (
-                                            <button
-                                            onClick={() => handleAcceptBid(bid._id)}
-                                            className="w-full bg-brand-500 hover:bg-brand-600 text-white font-bold py-2 rounded-xl text-xs transition-colors duration-200 shadow-md"
-                                            >
-                                                Accept & Hire
-                                            </button>
-                                        )}
-                                    </div>
-                                ))}
+                        {task.status === 'assigned' ? (
+                            <div className="space-y-4 text-center">
+                                <h3 className="text-lg font-bold text-white">Errand in Progress</h3>
+                                <p className="text-xs text-slate-400">
+                                    Tasker <span className="font-bold text-white">
+                                    {task.assignedTasker?.name} is working on this errand.
+                                </span>
+                                </p>
+                                <button
+                                onClick={async () => {
+                                    if (!window.confirm('Are you sure you want to mark this task as completed and release the locked escrow payment to the tasker?')) return;
+                                    setError('');
+                                    try {
+                                        await apiFetch(`/tasks/${task._id}/complete`, {method: 'POST'});
+                                        await refreshUser();
+                                        await fetchTaskDetails();
+                                } catch (err: any) {
+                                        setError(err.message || 'Failed to complete task.');
+                                    }
+                                    }}
+                                className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 rounded-xl text-sm transition-colors duration-200 shadwo-md animate-pulse-once"
+                                >
+                                    Confirm Completion & Release Payment
+                                </button>
                             </div>
+                        ) : (
+                            <>
+                            <h3 className="text-xl font-bold text-white">Received Bids ({bids.length}</h3>
+                                {bids.length === 0 ? (
+                                    <p className="text-slate-450 text-sm text-center py-6 border border-dashed border-slate-800 rounded-2xl">
+                                        No bids received yet. Taskers will place offers soon.
+                                    </p>
+                                ) : (
+                                    <div className="space-y-4 max-h-[400px] overflow-y-auto pr-1">
+                                        {bids.map((bid) => (
+                                            <div key={bid._id} className="bg-slate-950/40 border border-slate-850 p-4 rounded-2xl flex flex-col gap-3">
+                                                <div className="flex items-center justify-between">
+                                                    <div>
+                                                        <span className="font-semibold text-white text-sm flex items-center gap-1">
+                                                            {bid.tasker.name}
+                                                            {bid.tasker.isVerified && <ShieldCheck className="w-4 h-4 text-emerald-450"/>}
+                                                        </span>
+                                                        <span className="text-[10px] text-slate-450">
+                                                             {bid.tasker.rating > 0 ? `★ ${bid.tasker.rating.toFixed(1)}` : 'New Tasker'}
+                                                        </span>
+                                                    </div>
+                                                    <span className="text-emerald-450 font-black text-sm">₹{bid.bidAmount}</span>
+                                                </div>
+                                                {bid.message && (
+                                                    <p className="txt-xs txt-slate-400 bg-slate-950/80 p-2.5 rounded-xl border border-slate-850 italic">
+                                                        "{bid.message}"
+                                                    </p>
+                                                )}
+                                                <div className="flex items-center gap-2 text-[10px] text-slate-455">
+                                                    <Clock className="w-3.5 h-3.5"/>
+                                                    <span>Ready in: {bid.estimatedTime}</span>
+                                                </div>
+                                                {task.status === 'open' && (
+                                                    <button
+                                                        onClick={async () => {
+                                                            await handleAcceptBid(bid._id);
+                                                            await refreshUser();
+                                                        }}
+                                                        className="w-full bg-brand-500 hover:bg-brand-600 text-white font-bold py-2 rounded-xl text-xs transition-colors duration-200 shadow-md">
+                                                        Accept & Hire
+                                                    </button>
+                                                )}
+                                            </div>
+                                        ))}
+                                    </div>
+                                )}
+                            </>
                         )}
                     </div>
                 )}

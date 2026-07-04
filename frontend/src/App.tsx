@@ -8,6 +8,7 @@ import {Dashboard} from './pages/Dashboard';
 import {PostTask} from './pages/PostTask';
 import {ExploreTasks} from './pages/ExploreTasks';
 import {TaskDetails} from './pages/TaskDetails';
+import {Wallet} from './pages/Wallet';
 
 function App() {
     return (
@@ -48,6 +49,14 @@ function App() {
                             element={
                                 <ProtectedRoute>
                                     <TaskDetails />
+                                </ProtectedRoute>
+                            }
+                            />
+                            <Route
+                            path="/wallet"
+                            element={
+                                <ProtectedRoute>
+                                    <Wallet />
                                 </ProtectedRoute>
                             }
                             />
