@@ -11,6 +11,7 @@ import bidRoutes from './routes/bids';
 import walletRoutes from './routes/wallet';
 import messageRoutes from './routes/messages';
 import Message from './models/Message';
+import reviewRoutes from './routes/reviews';
 
 dotenv.config();
 
@@ -35,6 +36,7 @@ app.use('/api/tasks', taskRoutes);
 app.use('/api/bids', bidRoutes);
 app.use('/api/wallet', walletRoutes);
 app.use('/api/messages', messageRoutes);
+app.use('/api/reviews',reviewRoutes);
 
 app.get('/api/health', (req: Request, res: Response) => {
     res.json({status: 'ok', message: 'Dihadi.com Backend Server is running smoothly!'});
