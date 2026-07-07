@@ -53,6 +53,13 @@ interface ChatMessage {
     createdAt: string;
 }
 
+interface SubmittedReview {
+    _id: string;
+    rating: number;
+    comment?: string;
+    createdAt: string;
+}
+
 export const TaskDetails: React.FC = () => {
     const {id} = useParams<{id: string}>();
     const {user, refreshUser} = useAuth();
@@ -64,11 +71,15 @@ export const TaskDetails: React.FC = () => {
     const [bidAmount, setBidAmount] = useState('');
     const [estimatedTime, setEstimatedTime] = useState('');
     const [message, setMessage] = useState('');
-    const [bidSubmititing, setBidSubmititing] = useState(false);
+    const [bidSubmitting, setBidSubmitting] = useState(false);
     const [messages, setMessages] = useState<ChatMessage[]>([]);
     const [newMessageText, setNewMessageText] = useState('');
     const [socket, setSocket] = useState<any>(null);
     const chatEndRef = useRef<HTMLDivElement>(null);
+    const [reviewRating, setReviewRating] = useState(5);
+    const [reviewComment, setReviewComment] = useState('');
+    const [reviewSubmitted, setReviewSubmitted] = useState<SubmittedReview | null> (null);
+    const [reviewSubmitting, setReviewSubmitting] = useState(false);
 
     const fetchTaskDetails = async () => {
         setLoading(true);
@@ -91,6 +102,15 @@ export const TaskDetails: React.FC = () => {
                 if (taskData.status === 'assigned' || taskData.status === 'completed') {
                     const msgs = await apiFetch(`/messages/${id}`);
                     setMessages(msgs);
+                }
+            }
+            if (taskData.status === 'completed' && taskData.assignedTasker) {
+                try {
+                    const reviewsData = await apiFetch(`/reviews/user/${taskData.assignedTasker._id}`);
+                    const matchingReview = reviewsData.find((r: any) => r.task === id) || null;
+                    setReviewSubmitted(matchingReview);
+                } catch {
+                    setReviewSubmitted(null);
                 }
             }
         } catch (err: any) {
@@ -125,9 +145,9 @@ export const TaskDetails: React.FC = () => {
     }, [messages]);
     const handlePlaceBid = async (e: React.FormEvent) => {
         e.preventDefault();
-        if (!task || bidSubmititing) return;
+        if (!task || bidSubmitting) return;
         setError('');
-        setBidSubmititing(true);
+        setBidSubmitting(true);
         try {
             await apiFetch('/bids', {
                 method: 'POST',
@@ -145,7 +165,7 @@ export const TaskDetails: React.FC = () => {
         } catch (err: any) {
             setError(err.message || 'Failed to place bid.');
         } finally {
-            setBidSubmititing(false);
+            setBidSubmitting(false);
         }
     };
     const handleAcceptBid = async (bidId: string) => {
@@ -169,6 +189,28 @@ export const TaskDetails: React.FC = () => {
             text: newMessageText,
         });
         setNewMessageText('');
+    };
+    const handleSubmitReview = async (e: React.FormEvent)=> {
+        e.preventDefault();
+        if (!task || reviewSubmitting) return;
+        setError('');
+        setReviewSubmitting(true);
+        try {
+            await apiFetch('/reviews', {
+                method: 'POST',
+                body: JSON.stringify({
+                    taskId: task._id,
+                    rating: reviewRating,
+                    comment: reviewComment,
+                }),
+            });
+            setReviewComment('');
+            await fetchTaskDetails();
+        } catch (err: any) {
+            setError(err.message || 'Failed to submit review.');
+        } finally {
+            setReviewSubmitting(false);
+        }
     };
     if (loading) {
         return (
@@ -342,7 +384,7 @@ export const TaskDetails: React.FC = () => {
                                 </div>
                             ) : task.status === 'open' ? (
                                 <>
-                                <h3 className="text-xl font-bold text-white">Received Bids ({bids.length}</h3>
+                                <h3 className="text-xl font-bold text-white">Received Bids ({bids.length})</h3>
                                     {bids.length === 0 ? (
                                         <p className="text-slate-450 text-sm text-center py-6 border border-dashed border-slate-800 rounded-2xl">
                                             No bids received yet. Taskers will place offers soon.
@@ -383,10 +425,65 @@ export const TaskDetails: React.FC = () => {
                                         </div>
                                     )}
                                 </>
-                            ) : (
-                                <p className="text-slate-450 text-sm text-center py-4">
-                                    This task has been completed and archived.
-                                </p>
+                            ) : null}
+                            {/* Task completed: Rating form or display */}
+                            {task.status === 'completed' && (
+                                <div className="space-y-4">
+                                    {reviewSubmitted ? (
+                                        <div className="bg-slate-955/40 border border-slate-850 rounded-2xl p-4 space-y-2">
+                                            <h4 className="text-xs text-slate-450 uppercase font-bold">Your Submitted Review</h4>
+                                            <div className="flex items-center gap-1 text-amber-400">
+                                                {Array.from({length: 5}).map((_, index) => (
+                                                    <Star
+                                                    key={index}
+                                                    className={`w-4 h-4 ${index < reviewSubmitted.rating ? 'fill-amber-400' : 'text-slate-600'}`}
+                                                    />
+                                                ))}
+                                            </div>
+                                            {reviewSubmitted.comment && (
+                                                <p className="text-xs text-slate-300 italic">"{reviewSubmitted.comment}"</p>
+                                            )}
+                                        </div>
+                                    ) : (
+                                        <form onSubmit={handleSubmitReview} className="space-y-4">
+                                            <h3 className="text-md font-bold text-white">Rate the Tasker's Work</h3>
+                                            {/* Rating Stars */}
+                                            <div className="flex items-center gap-2">
+                                                {Array.from({length: 5}).map((_, index) => {
+                                                    const starValue = index  + 1;
+                                                return (
+                                                    <button
+                                                    type="button"
+                                                    key={index}
+                                                    onClick={() => setReviewRating(starValue)}
+                                                    className="text-amber-400 hover:scale-110 transition-transform duration-100"
+                                                    >
+                                                        <Star className={`w-7 h-7 ${starValue <= reviewRating ? 'fill-amber-400' : 'text-slate-600'}`}/>
+                                                    </button>
+                                                );
+                                                })}
+                                            </div>
+                                            {/* Comment */}
+                                            <div>
+                                                <label className="block text-xs font-semibold text-slate-400 uppercase mb-2">Feedback Comment</label>
+                                                <textarea
+                                                rows={3}
+                                                value={reviewComment}
+                                                onChange={(e) => setReviewComment(e.target.value)}
+                                                placeholder="Tell us about your experience..."
+                                                className="w-full bg-slate-950 border border-slate-850 focus:border-brand-500 rounded-xl py-2 px-3 text-white text-xs focus:outline-none transition-colors duration-200 resize-none"
+                                                />
+                                            </div>
+                                            <button
+                                            type="submit"
+                                            disabled={reviewSubmitting}
+                                            className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-2 rounded-xl text-xs transition-colors duration-200 shadow-md"
+                                            >
+                                                {reviewSubmitting ? 'Submitting...' : 'Submit Feedback'}
+                                            </button>
+                                        </form>
+                                    )}
+                                </div>
                             )}
                         </div>
                     )}
@@ -441,11 +538,11 @@ export const TaskDetails: React.FC = () => {
                                     </div>
                                     <button
                                     type="submit"
-                                    disabled={bidSubmititing}
+                                    disabled={bidSubmitting}
                                     className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3 rounded-xl text-sm transition-colors duration-200 shadow-md flex items-center justify-center gap-2"
                                     >
                                         <Send className="w-4 h-4"/>
-                                        {bidSubmititing ? 'Submitting...' : 'Submit Bid'}
+                                        {bidSubmitting ? 'Submitting...' : 'Submit Bid'}
                                     </button>
                                 </form>
                             )}
