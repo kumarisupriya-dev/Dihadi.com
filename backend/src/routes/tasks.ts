@@ -3,6 +3,7 @@ import Task from '../models/Task';
 import {authMiddleware, AuthRequest} from '../middleware/auth';
 import User from '../models/User';
 import Transaction from '../models/Transaction';
+import Notification from '../models/Notification';
 
 const router = Router();
 router.post('/', authMiddleware, async (req: AuthRequest, res: Response):
@@ -146,7 +147,16 @@ Promise<void> => {
             description: `Received payment for completing errand: "${task.title}"`
         });
         await taskerTx.save();
-
+        const payoutNotification = new Notification({
+            user: task.assignedTasker,
+            title: 'Payment Released! 💰',
+            body: `Client confirmed completion. Payout of ₹${task.escrowAmount} has been released to your wallet.`,
+            type: 'payment_released',
+            task: task._id
+        });
+        await payoutNotification.save();
+        const io = req.app.get('io');
+        io.to(task.assignedTasker.toString()).emit('new_notification', payoutNotification);
         res.json({message: 'Task marked completed and payment released to tasker!', task});
     } catch (error) {
         console.error('Complete task error:', error);

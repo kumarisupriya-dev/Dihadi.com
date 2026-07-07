@@ -5,6 +5,7 @@ import {authMiddleware, AuthRequest} from '../middleware/auth';
 import Auth from "./auth";
 import User from '../models/User';
 import Transaction from '../models/Transaction';
+import Notification from '../models/Notification';
 
 const router = Router();
 
@@ -44,6 +45,16 @@ Promise<void> => {
             status: 'pending'
         });
         await newBid.save();
+        const newNotification = new Notification({
+            user: task.client,
+            title: 'New Bid Received! 💸',
+            body: `A new bid of ₹${bidAmount} has been placed on your errand: "${task.title}".`,
+            type: 'bid_received',
+            task: task._id
+        });
+        await newNotification.save();
+        const io = req.app.get('io');
+        io.to(task.client.toString()).emit('new_notification', newNotification);
         res.status(201).json(newBid);
     } catch (error) {
         console.error('Place bid error:', error);
@@ -128,8 +139,17 @@ Promise<void> => {
             description: `Funds locked in escrow for errand: "${task.title}"`
         });
         await transaction.save();
-
-        res.json({message: 'Bid accepted, payment locked in escrow, and tasker hired!,task, bid'});
+        const taskerNotification = new Notification({
+            user: bid.tasker,
+            title: 'Offer Accepted! 🎉',
+            body: `Your bid of ₹${bid.bidAmount} was accepted for the errand: "${task.title}". You are hired!`,
+            type: 'bid_accepted',
+            task: task._id
+        });
+        await taskerNotification.save();
+        const io = req.app.get('io');
+        io.to(bid.tasker.toString()).emit('new_notification', taskerNotification);
+        res.json({message: 'Bid accepted, payment locked in escrow, and tasker hired!',task, bid});
     } catch (error) {
         console.error('Accept bid error:', error);
         res.status(500).json({error: 'server error accepting bid.'});

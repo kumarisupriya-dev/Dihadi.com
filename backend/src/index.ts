@@ -10,6 +10,7 @@ import taskRoutes from './routes/tasks';
 import bidRoutes from './routes/bids';
 import walletRoutes from './routes/wallet';
 import messageRoutes from './routes/messages';
+import notificationRoutes from './routes/notifications';
 import Message from './models/Message';
 import reviewRoutes from './routes/reviews';
 
@@ -28,6 +29,8 @@ const io = new Server(server, {
     }
 });
 
+app.set('io', io);
+
 app.use(express.json());
 app.use(cors({origin: ['http://localhost:5173', 'http://localhost:5174']}));
 app.use(helmet({contentSecurityPolicy: false}));
@@ -36,6 +39,7 @@ app.use('/api/tasks', taskRoutes);
 app.use('/api/bids', bidRoutes);
 app.use('/api/wallet', walletRoutes);
 app.use('/api/messages', messageRoutes);
+app.use('/api/notifications', notificationRoutes);
 app.use('/api/reviews',reviewRoutes);
 
 app.get('/api/health', (req: Request, res: Response) => {
