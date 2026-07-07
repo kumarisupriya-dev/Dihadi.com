@@ -9,10 +9,12 @@ import {PostTask} from './pages/PostTask';
 import {ExploreTasks} from './pages/ExploreTasks';
 import {TaskDetails} from './pages/TaskDetails';
 import {Wallet} from './pages/Wallet';
+import {SocketProvider} from './context/SocketContext';
 
 function App() {
     return (
         <AuthProvider>
+            <SocketProvider>
             <Router>
                 <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col">
                     <Navbar />
@@ -65,6 +67,7 @@ function App() {
                     </main>
                 </div>
             </Router>
+            </SocketProvider>
         </AuthProvider>
     );
 }
