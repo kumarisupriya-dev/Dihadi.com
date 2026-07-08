@@ -4,6 +4,20 @@ import {useAuth} from '../context/Authcontext';
 import {apiFetch} from '../utils/api';
 import {io} from 'socket.io-client';
 import {IndianRupee, Clock, MessageSquare, ShieldCheck, Star, AlertCircle, ArrowLeft, Send} from 'lucide-react';
+import {MapContainer, TileLayer, Marker, Popup} from 'react-leaflet';
+import L from 'leaflet';
+import 'leaflet/dist/leaflet.css';
+import markerIcon from 'leaflet/dist/images/marker-icon.png';
+import markerShadow from 'leaflet/dist/images/marker-shadow.png';
+
+let DefaultIcon = L.icon({
+    iconUrl: markerIcon,
+    shadowUrl: markerShadow,
+    iconSize: [25, 41],
+    iconAnchor: [12, 41],
+    popupAnchor: [1, -34]
+});
+L.Marker.prototype.options.icon = DefaultIcon;
 
 interface Task {
     _id: string;
@@ -12,6 +26,9 @@ interface Task {
     category: string;
     budget: number;
     address: string;
+    location: {
+        coordinates: [number, number];
+    };
     status: 'open' | 'assigned' | 'completed';
     createdAt: string;
     client: {
@@ -232,6 +249,7 @@ export const TaskDetails: React.FC = () => {
     const isOwner = task.client._id === user.id;
     const myBid = bids.find((b) => b.tasker._id === user.id) || null;
     const isParticipant = isOwner || task.assignedTasker?._id === user.id;
+    const [taskLng, taskLat] = task.location.coordinates;
 
     return (
         <div className="max-w-5xl mx-auto px-6 py-12">
@@ -271,6 +289,25 @@ export const TaskDetails: React.FC = () => {
                         <p className="text-slate-355 bg-slate-955/30 p-4 rounded-2xl border border-slate-850 text-sm">
                             {task.address}
                         </p>
+                        {/* Leaflet Map */}
+                        <div className="h-64 rounded-2xl overflow-hidden border border-slate-800 z-10 relative">
+                            <MapContainer
+                            center={[taskLat, taskLng]}
+                            zoom={14}
+                            scrollWheelZoom={false}
+                            className="w-full h-full"
+                            >
+                                <TileLayer
+                                url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                                attribution='&copy; <a href="https://osm.org/copyright">OpenStreetMap</a> contributors'
+                                />
+                                <Marker position={[taskLat, taskLng]}>
+                                    <Popup>
+                                        <div className="text-xs font-bold text-slate-900">Job Site: {task.title}</div>
+                                    </Popup>
+                                </Marker>
+                            </MapContainer>
+                        </div>
                     </div>
                     {/* Client Info Card */}
                     <div className="bg-slate-900 border border-slate-800 rounded-3xl p-6 shadow-xl flex items-center justify-between">

@@ -2,7 +2,7 @@ import React, {createContext, useContext, useState, useEffect} from 'react';
 import {useAuth} from './Authcontext';
 import {io, Socket} from 'socket.io-client';
 import {apiFetch} from '../utils/api';
-import {Bell, ShieldCheck, CheckCircle2, MessageSquare, IndianRupee, Sparkles, X} from 'lucide-react';
+import { CheckCircle2, MessageSquare, IndianRupee, Sparkles, X} from 'lucide-react';
 
 interface Notification {
     _id: string;
