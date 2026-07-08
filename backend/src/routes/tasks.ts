@@ -82,7 +82,7 @@ Promise<void> => {
 router.get('/my-jobs', authMiddleware, async (req: AuthRequest, res: Response):
 Promise<void> => {
     try {
-        const tasks = await Task.find({assignedtasker: req.userId}).populate('client', 'name').sort({createdAt: -1});
+        const tasks = await Task.find({assignedTasker: req.userId}).populate('client', 'name').sort({createdAt: -1});
         res.json(tasks);
     } catch (error) {
         console.error('Fetch assigned tasks error:', error);
