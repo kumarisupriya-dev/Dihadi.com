@@ -53,6 +53,10 @@ io.on('connection', (socket) => {
         console.log(`Socket ${socket.id} joined chat room: ${taskId}`);
     });
 
+    socket.on('share_location', (data: {taskId: string; coordinated: [number, number]}) =>
+        {io.to(data.taskId).emit('location_update', data.coordinated);
+    });
+
     socket.on('Send_message', async (data: {taskId: string; senderId: string;  text: string}) => {
         try {
             const {taskId, senderId, text} = data;

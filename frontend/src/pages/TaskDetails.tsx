@@ -19,6 +19,14 @@ let DefaultIcon = L.icon({
 });
 L.Marker.prototype.options.icon = DefaultIcon;
 
+const userIcon = L.icon({
+    iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-green.png',
+    shadowUrl: markerShadow,
+    iconSize: [25, 41],
+    iconAnchor: [12, 41],
+    popupAnchor: [1, -34]
+});
+
 interface Task {
     _id: string;
     title: string;
@@ -97,6 +105,9 @@ export const TaskDetails: React.FC = () => {
     const [reviewComment, setReviewComment] = useState('');
     const [reviewSubmitted, setReviewSubmitted] = useState<SubmittedReview | null> (null);
     const [reviewSubmitting, setReviewSubmitting] = useState(false);
+    const [taskerLocation, setTaskerLocation] = useState<[number, number] | null> (null);
+    const [isTrackingActive, setIsTRackingActive] = useState(false);
+    const trackingIntervalRef = useRef<any>(null);
 
     const fetchTaskDetails = async () => {
         setLoading(true);
@@ -151,6 +162,9 @@ export const TaskDetails: React.FC = () => {
                 socketInstance.on('receive_message', (msg: ChatMessage) => {
                     setMessages((prev) => [...prev, msg]);
                 });
+                socketInstance.on('location_update', (coords: [number, number]) => {
+                    setTaskerLocation(coords);
+                })
                 return () => {
                     socketInstance.disconnect();
                 };
@@ -229,6 +243,43 @@ export const TaskDetails: React.FC = () => {
             setReviewSubmitting(false);
         }
     };
+    const toggleLocationSharing = () => {
+        if (!task || !socket) return;
+
+        if (isTrackingActive) {
+            if (trackingIntervalRef.current)
+    clearInterval(trackingIntervalRef.current);
+            setIsTRackingActive(false);
+            setTaskerLocation(null);
+            let currentLng = taskLng - 0.012;
+            let currentLat = taskLat - 0.012;
+
+            socket.emit('share_location', {
+                taskId: task._id,
+                coordinates: [currentLng, currentLat]
+            });
+
+            trackingIntervalRef.current = setInterval(() => {
+                currentLng += (taskLng - currentLng) * 0.08;
+                currentLat += (taskLat - currentLat) * 0.08;
+
+                socket.emit('share_location', {
+                    taskId: task._id,
+                    coordinates: [currentLat, currentLng]
+                });
+                if (Math.abs(taskLng - currentLng) < 0.0001 && Math.abs(taskLat - currentLat) < 0.0001) {
+                    clearInterval(trackingIntervalRef.current);
+                    setIsTRackingActive(false);
+                }
+            }, 2000);
+        }
+    };
+    useEffect(() => {
+        return () => {
+            if (trackingIntervalRef.current)
+    clearInterval(trackingIntervalRef.current);
+        };
+    }, []);
     if (loading) {
         return (
             <div className="flex items-center justify-center min-h-[80vh] bg-slate-950">
@@ -306,6 +357,13 @@ export const TaskDetails: React.FC = () => {
                                         <div className="text-xs font-bold text-slate-900">Job Site: {task.title}</div>
                                     </Popup>
                                 </Marker>
+                                {taskerLocation && (
+                                <Marker position={[taskerLocation[1], taskerLocation[0]]} icon={userIcon}>
+                                    <Popup>
+                                        <div className="text-xs font-bold text-slate-900">Hired Earner (Live Location)</div>
+                                    </Popup>
+                                </Marker>
+                                    )}
                             </MapContainer>
                         </div>
                     </div>
@@ -619,6 +677,15 @@ export const TaskDetails: React.FC = () => {
                                     <p className="text-xs text-slate-350">
                                         Your live chat is now active. Communicate with the client to complete this task.
                                     </p>
+                                    <button
+                                    onClick={toggleLocationSharing}
+                                    className={`w-full font-bold py-2 rounded-xl text-xs transition-all duration-200 shadow-md border ${
+                                        isTrackingActive ? 'bg-rose-600/15 border-rose-500/20 text-rose-455 hover:bg-rose-600/20' :
+                                            'bg-emerald-600 hover:bg-emerald-700 border-emerald-700 text-white'
+                                    }`}
+                                    >
+                                        {isTrackingActive ? 'Stop Live Location Sharing' : 'Start Live Location Sharing'}
+                                    </button>
                                 </div>
                             )}
                             {/* Task is completed */}

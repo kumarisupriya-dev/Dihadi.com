@@ -71,15 +71,16 @@ Promise<void> => {
             res.status(400).json({error: 'Task not found.'});
             return;
         }
-        if (task.client.toString() !== req.userId) {
-            res.status(403).json({error: 'Not authorized to view bids for this task.'})
+        if (task.client.toString() === req.userId) {
+            const bids = await Bid.find({task: taskId})
+                .populate('tasker', 'name rating isVerified reviewCount')
+                .sort({createdAt: -1});
+            res.json(bids);
             return;
         }
-        const bids = await Bid.find({task: taskId})
-            .populate('tasker', 'name rating isVerified reviewCount')
-            .sort({createdAt: -1});
-
-        res.json(bids);
+        const myBid = await Bid.find({task: taskId, tasker: req.userId})
+            .populate('tasker', 'name rating isVerified reviewCount');
+        res.json(myBid);
     } catch (error) {
         console.error('Fetch bids error:', error);
         res.status(500).json({error: 'Server error fetching bids.'});
@@ -149,7 +150,7 @@ Promise<void> => {
         await taskerNotification.save();
         const io = req.app.get('io');
         io.to(bid.tasker.toString()).emit('new_notification', taskerNotification);
-        res.json({message: 'Bid accepted, payment locked in escrow, and tasker hired!',task, bid});
+        res.json({message: 'Bid accepted, payment locked in escrow, and tasker hired!,task, bid'});
     } catch (error) {
         console.error('Accept bid error:', error);
         res.status(500).json({error: 'server error accepting bid.'});
