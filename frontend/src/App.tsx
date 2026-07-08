@@ -10,9 +10,11 @@ import {ExploreTasks} from './pages/ExploreTasks';
 import {TaskDetails} from './pages/TaskDetails';
 import {Wallet} from './pages/Wallet';
 import {SocketProvider} from './context/SocketContext';
+import {ThemeProvider} from './context/ThemeContext';
 
 function App() {
     return (
+      <ThemeProvider>
         <AuthProvider>
             <SocketProvider>
             <Router>
@@ -69,6 +71,7 @@ function App() {
             </Router>
             </SocketProvider>
         </AuthProvider>
+      </ThemeProvider>
     );
 }
 

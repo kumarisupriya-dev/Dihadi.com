@@ -6,9 +6,43 @@
     --color-brand-500: '#0284c7';
     --color-brand-600: '#0369a1';
     --color-brand-700: '075985';
+
+    --color-slate-950: var(--slate-950);
+    --color-slate-900: var(--slate-900);
+    --color-slate-850: var(--slate-850);
+    --color-slate-800: var(--slate-800);
+    --color-slate-100: var(--slate-100);
+    --color-slate-200: var(--slate-200);
+    --color-slate-300: var(--slate-300);
+    --color-slate-400: var(--slate-400);
+    --color-slate-450: var(--slate-450);
+}
+
+:root {
+    --slate-950: #f8fafc;
+    --slate-900: #ffffff;
+    --slate-850: #f1f5f9;
+    --slate-800: #e2e8f0;
+    --slate-100: #0f172a;
+    --slate-200: #1e293b;
+    --slate-300: #334155;
+    --slate-400: #475569;
+    --slate-450: #64748b;
+}
+
+.dark {
+    --slate-950: #020617;
+    --slate-900: #0f172a;
+    --slate-850: #1e293b;
+    --slate-800: #1e293b;
+    --slate-100: #f1f5f9;
+    --slate-200: #cbd5e1;
+    --slate-300: #94a3b8;
+    --slate-400: #94a3b8;
+    --slate-450: #64748b;
 }
 body {
-    @apply bg-slate-900 text-slate-100 min-h-screen antialiased;
+    @apply bg-slate-950 text-slate-100 min-h-screen antialiased transition-colors duration-200;
 }
 @keyframes slideInRight {
     from {

@@ -1,12 +1,14 @@
 import React, {useState} from 'react';
 import {useAuth} from '../context/Authcontext';
 import {useSocket} from '../context/SocketContext';
-import {Briefcase, LogOut, ShieldCheck, Wallet, Bell} from 'lucide-react';
+import {Briefcase, LogOut, ShieldCheck, Wallet, Bell, Sun, Moon} from 'lucide-react';
 import {useNavigate} from 'react-router-dom';
+import {useTheme} from '../context/ThemeContext';
 
 export const Navbar: React.FC = () => {
     const {user, currentRole, toggleRole, logout} = useAuth();
     const {notifications, unreadCount, markAllAsRead} = useSocket();
+    const {theme, toggleTheme} = useTheme();
     const [showNotifications, setShowNotifications] = useState(false);
     const navigate = useNavigate();
 
@@ -30,7 +32,14 @@ export const Navbar: React.FC = () => {
                         <span className="font-semibold text-slate-200">₹{(user.walletBalance ?? 0).toFixed(2)}</span>
                     </div>
                     {/* Notifications Dropdown Bell */}
-                    <div className="relative">
+                    <div className="relative"></div>
+                    <button
+                    onClick={toggleTheme}
+                    className="p-2 bg-slate-800/60 hover:bg-slate-800 border border-slate-700/50 hover:border-amber-500/30 rounded-xl transition-all duration-200 text-slate-400 hover:text-amber-400"
+                    title="Toogle light/dark mode"
+                    >
+                        {theme === 'dark' ? <Sun className="w-5 h-5"/> : <Moon className="w-5 h-5 text-indigo-400"/>}
+                    </button>
                         <button
                         onClick={() => {
                             setShowNotifications(!showNotifications);
@@ -76,7 +85,6 @@ export const Navbar: React.FC = () => {
                                 </div>
                             </div>
                         )}
-                    </div>
                     {/* Toggle Role Button */}
                    <button
                    onClick={toggleRole}
