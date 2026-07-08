@@ -8,6 +8,8 @@ interface User {
     walletBalance: number;
     location? : {coordinates: [number, number]};
     isVerified: boolean;
+    verificationStatus?: 'none' | 'pending' | 'verified';
+    isAdmin?: boolean;
 }
 interface AuthContextType {
     user: User | null;
@@ -44,7 +46,9 @@ export const AuthProvider: React.FC<{children: React.ReactNode}> = ({ children }
                             email: dbUser.email,
                             walletBalance: dbUser.walletBalance ?? 0,
                             location: dbUser.location,
-                            isVerified: dbUser.isVerified
+                            isVerified: dbUser.isVerified,
+                            verificationStatus: dbUser.verificationStatus ?? 'none',
+                            isAdmin: dbUser.isAdmin ?? false
                         });
                     } else {
                         logout();
@@ -95,7 +99,9 @@ export const AuthProvider: React.FC<{children: React.ReactNode}> = ({ children }
                         email: dbUser.email,
                         walletBalance: dbUser.walletBalance ?? 0,
                         location: dbUser.location,
-                        isVerified: dbUser.isVerified
+                        isVerified: dbUser.isVerified,
+                        verificationStatus: dbUser.verificationStatus ?? 'none',
+                        isAdmin: dbUser.isAdmin ?? false
                     });
                 }
             } catch (err) {

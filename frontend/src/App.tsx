@@ -11,6 +11,7 @@ import {TaskDetails} from './pages/TaskDetails';
 import {Wallet} from './pages/Wallet';
 import {SocketProvider} from './context/SocketContext';
 import {ThemeProvider} from './context/ThemeContext';
+import {Verification} from './pages/Verification';
 
 function App() {
     return (
@@ -61,6 +62,14 @@ function App() {
                             element={
                                 <ProtectedRoute>
                                     <Wallet />
+                                </ProtectedRoute>
+                            }
+                            />
+                            <Route
+                            path="/verification"
+                            element={
+                                <ProtectedRoute>
+                                    <Verification />
                                 </ProtectedRoute>
                             }
                             />

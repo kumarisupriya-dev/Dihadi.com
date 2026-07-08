@@ -85,6 +85,20 @@ export const Navbar: React.FC = () => {
                                 </div>
                             </div>
                         )}
+                    <button
+                    onClick={() => navigate('/verification')}
+                    className={`text-[10px] font-bold px-3 py-1.5 rounded-xl border transition-all duration-200 ${
+                        user.verificationStatus  ==='verified' ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-450 hover:bg-emerald-500/20' :
+                            user.verificationStatus === 'pending' ? 'bg-amber-500/10 border-amber-500/20 tex-amber-400 hover:bg-amber-500/20' : 
+                                'bg-slate-800 hover:bg-slate-750 border-slate-700 text-slate-300'
+                    }`}
+                    >
+                        {user.verificationStatus === 'verified'
+                        ? 'Profile Verified'
+                        : user.verificationStatus === 'pending'
+                        ? 'Pending Review'
+                        : 'Get Verified'}
+                    </button>
                     {/* Toggle Role Button */}
                    <button
                    onClick={toggleRole}

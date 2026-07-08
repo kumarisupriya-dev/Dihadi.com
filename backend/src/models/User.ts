@@ -10,6 +10,9 @@ export interface IUser extends Document {
     };
     walletBalance: number;
     isVerified: boolean;
+    verificationStatus: 'none' | 'pending' | 'verified';
+    verificationDocument?: string;
+    isAdmin: boolean;
     rating: number;
     reviewCount: number;
     createdAt: Date;
@@ -17,7 +20,7 @@ export interface IUser extends Document {
 
 const UserSchema: Schema = new Schema({
     name: {type: String, required: true},
-    email: {type: String, required: true, unique: true, lowercase: true, trim: true},
+    email: {type: String, required:true, unique: true, lowercase: true, trim: true},
     passwordHash: {type: String, required: true},
     location: {
         type: {type: String, enum: ['Point'], default: 'Point'},
@@ -25,7 +28,14 @@ const UserSchema: Schema = new Schema({
     },
     walletBalance: {type: Number, default: 0},
     isVerified: {type: Boolean, default: false},
-    rating: {type:Number, default: 0},
+    verificationStatus: {
+        type: String,
+        enum: ['none', 'pending', 'verified'],
+        default: 'none'
+    },
+    verificationDocument: {type: String},
+    isAdmin: {type: Boolean, default: false},
+    rating: {type: Number, default: 0},
     reviewCount: {type: Number, default: 0},
     createdAt: {type: Date, default: Date.now}
 });

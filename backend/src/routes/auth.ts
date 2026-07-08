@@ -40,7 +40,9 @@ router.post('/signup', async (req: Request, res: Response): Promise<void> => {
               email: newUser.email,
               walletBalance: newUser.walletBalance,
               location: newUser.location,
-              isVerified: newUser.isVerified
+              isVerified: newUser.isVerified,
+              verificationStatus: newUser.verificationStatus,
+              isAdmin: newUser.isAdmin
           }
       });
   } catch (error) {
@@ -71,7 +73,9 @@ router.post('/login', async (req: Request, res: Response): Promise<void> => {
             email: user.email,
             walletBalance: user.walletBalance,
             location: user.location,
-            isVerified: user.isVerified
+            isVerified: user.isVerified,
+            verificationStatus: user.verificationStatus,
+            isAdmin: user.isAdmin
         }
         });
     } catch (error) {
@@ -90,6 +94,92 @@ router.get('/me', authMiddleware, async (req: AuthRequest, res: Response) : Prom
         res.json({user});
     } catch (error) {
         res.status(500).json({error: 'server error fetching profile'});
+    }
+});
+
+router.post('/verify-request', authMiddleware, async (req: AuthRequest, res: Response):
+Promise<void> => {
+    try {
+        const {documentBase64} = req.body;
+        if (!documentBase64) {
+            res.status(400).json({error: 'Please upload a document file.'});
+            return;
+        }
+        const user = await User.findById(req.userId);
+        if (!user) {
+            res.status(404).json({error: 'User not found.'});
+            return;
+        }
+        user.verificationStatus = 'pending';
+        user.verificationDocument = documentBase64;
+        await user.save();
+        res.json({message: 'Verification request submitted successfully.', verificationStatus: 'pending'});
+    } catch (error) {
+        console.error('Submit verify request error:', error);
+        res.status(500).json({error: 'Server error submitting request.'});
+    }
+});
+
+router.get('/pending-verifications', authMiddleware, async (req: AuthRequest, res: Response):
+Promise<void> => {
+    try {
+        const adminUser = await User.findById(req.userId);
+        if (!adminUser || !adminUser.isAdmin) {
+            res.status(403).json({error: 'Admin access denied.'});
+            return;
+        }
+        const pendingUsers = await User.find({verificationStatus: 'pending'}).select('name email verificationDocument');
+        res.json(pendingUsers);
+    } catch (error) {
+        console.error('Pending verification error:', error);
+        res.status(500).json({error: 'Server error fetching verification requests.'});
+    }
+});
+
+router.post('/approve-verification/:userId', authMiddleware, async (req: AuthRequest, res: Response):
+Promise<void> => {
+    try {
+        const {approve} = req.body;
+        const adminUser = await User.findById(req.userId);
+        if (!adminUser || !adminUser.isAdmin) {
+            res.status(403).json({error: 'Admin access denied.'});
+            return;
+        }
+        const targetUser = await User.findById(req.params.userId);
+        if (!targetUser) {
+            res.status(404).json({error: 'Target user not found.'});
+            return;
+        }
+        if (approve) {
+            targetUser.isVerified = true;
+            targetUser.verificationStatus = 'verified';
+        } else {
+            targetUser.isVerified = false;
+            targetUser.verificationStatus = 'none';
+        }
+        targetUser.verificationDocument = undefined;
+        await targetUser.save();
+        res.json({message: `User verification request ${approve ? 'approved' : 'rejected'}.`});
+    } catch (error) {
+        console.error('Approve verification error:', error);
+        res.status(500).json({error: 'Server error updating user verification.'});
+    }
+});
+
+router.post('/make-admin', authMiddleware, async (req: AuthRequest, res: Response):
+Promise<void> => {
+    try {
+        const user = await User.findById(req.userId);
+        if (!user) {
+            res.status(404).json({error: 'User not found.'});
+            return;
+        }
+        user.isAdmin = true;
+        await user.save();
+        res.json({message: 'You are now an Admin! Enjoy full verification control privileges.', isAdmin: true});
+    } catch (error) {
+        console.error('Make admin error:', error);
+        res.status(500).json({error: 'Server error making user admin.'});
     }
 });
 
