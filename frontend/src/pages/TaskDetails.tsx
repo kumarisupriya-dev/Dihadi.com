@@ -50,6 +50,8 @@ interface Task {
         _id: string;
         name: string;
         email: string;
+        rating: number;
+        isVerified: boolean;
     };
 }
 
@@ -245,35 +247,18 @@ export const TaskDetails: React.FC = () => {
     };
     const toggleLocationSharing = () => {
         if (!task || !socket) return;
-
+    const [taskLng, taskLat] = task.location.coordinates;
         if (isTrackingActive) {
             if (trackingIntervalRef.current)
-    clearInterval(trackingIntervalRef.current);
+                clearInterval(trackingIntervalRef.current);
             setIsTRackingActive(false);
             setTaskerLocation(null);
-            let currentLng = taskLng - 0.012;
-            let currentLat = taskLat - 0.012;
 
             socket.emit('share_location', {
                 taskId: task._id,
-                coordinates: [currentLng, currentLat]
+                coordinates: null
             });
-
-            trackingIntervalRef.current = setInterval(() => {
-                currentLng += (taskLng - currentLng) * 0.08;
-                currentLat += (taskLat - currentLat) * 0.08;
-
-                socket.emit('share_location', {
-                    taskId: task._id,
-                    coordinates: [currentLat, currentLng]
-                });
-                if (Math.abs(taskLng - currentLng) < 0.0001 && Math.abs(taskLat - currentLat) < 0.0001) {
-                    clearInterval(trackingIntervalRef.current);
-                    setIsTRackingActive(false);
-                }
-            }, 2000);
-        }
-    };
+        } else {}
     useEffect(() => {
         return () => {
             if (trackingIntervalRef.current)
@@ -369,30 +354,59 @@ export const TaskDetails: React.FC = () => {
                     </div>
                     {/* Client Info Card */}
                     <div className="bg-slate-900 border border-slate-800 rounded-3xl p-6 shadow-xl flex items-center justify-between">
-                        <div className="flex items-center gap-4">
-                            <div className="bg-slate-800/80 p-3.5 rounded-2xl border border-slate-700">
-                                <Star className="w-7 h-7 text-amber-400 fill-amber-400"/>
-                            </div>
-                            <div>
-                                <h4 className="font-bold text-white text-lg flex items-center gap-1.5">
-                                    <button
-                                    onClick={() => navigate(`/profile/${task.client._id}`)}
-                                    className="hover:text-brand-400 hover:underline transition-colors text-left"
-                                    >
-                                        {task.client.name}
-                                    </button>
-                                    {task.client.isVerified && <ShieldCheck className="w-5 h-5 text-emerald-450"/>}
-                                </h4>
-                                <p className="text-xs text-slate-450">Client Profile</p>
-                            </div>
-                        </div>
-                        <div className="text-right">
-                            <span className="text-md font-bold text-slate-200 flex items-center gap-1">
-                                {task.client.rating > 0 ? `${task.client.rating.toFixed(1)} / 5.0` : 'No reviews'}
-                            </span>
-                            <p className="text-xs text-slate-455">Rating</p>
-                        </div>
-                    </div>
+                        {isOwner && task.assignedTasker ? (
+                          <>
+                              <div className="flex items-center gap-4">
+                                  <div className="bg-slate-800/80 p-3.5 rounded-2xl border border-slate-700">
+                                      <Star className="w-7 h-7 text-indigo-400 fill-indigo-400/20"/>
+                                  </div>
+                                  <div>
+                                      <h4 className="font-bold text-white text-lg flex items-center gap-1.5">
+                                          <button
+                                          onClick={() => navigate(`/profile/${task.assignedTasker?._id}`)}
+                                          className="hover:text-brand-400 hover:underline transition-colors text-left"
+                                          >
+                                              {task.assignedTasker.name}
+                                          </button>
+                                          {task.assignedTasker.isVerified && <ShieldCheck className="w-5 h-5 text-emerald-450"/>}
+                                      </h4>
+                                      <p className="text-xs text-slate-455">Assigned Tasker Profile</p>
+                                  </div>
+                              </div>
+                              <div className="text-right">
+                                  <span className="text-md font-bold text-slate-200 flex items-center gap-1 justify-end">
+                                      {task.assignedTasker.rating > 0 ? `${task.assignedTasker.rating.toFixed(1)} / 5.0` : 'No reviews'}
+                                  </span>
+                                  <p className="text-xs text-slate-455">Tasker Rating</p>
+                              </div>
+                          </>
+                        ) : (
+                            <>
+                                <div className="flex items-center gap-4">
+                                    <div className="bg-slate-800/80 p-3.5 rounded-2xl border border-slate-700">
+                                        <Star className="w-7 h-7 text-amber-400 fill-amber-400"/>
+                                    </div>
+                                    <div>
+                                        <h4 className="font-bold text-white text-lg flex items-center gap-1.5">
+                                            <button
+                                            onClick={() => navigate(`/profile/${task.client._id}`)}
+                                            className="hover:text-brand-400 hover:underline transition-colors text-lfet"
+                                            >
+                                                {task.client.name}
+                                            </button>
+                                            {task.client.isVerified && <ShieldCheck className="w-5 h-5 text-emerald-450"/>}
+                                        </h4>
+                                        <p className="text-xs text-slate-455">Client Profile</p>
+                                    </div>
+                                </div>
+                                <div className="text-right">
+                                    <span className="text-md font-bold text-slate-200 flex items-center gap-1 justify-end">
+                                        {task.client.rating > 0 ? `${task.client.rating.toFixed(1)} / 5.0` : 'No reviews'}
+                                    </span>
+                                    <p className="text-xs text-slate-455">Client Rating</p>
+                                </div>
+                            </>
+                        )}
                 </div>
                 {/* Right Column: Actions & Chat */}
                 <div className="lg:col-span-1 space-y-6">
