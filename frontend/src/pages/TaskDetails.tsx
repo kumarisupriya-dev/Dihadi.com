@@ -258,7 +258,30 @@ export const TaskDetails: React.FC = () => {
                 taskId: task._id,
                 coordinates: null
             });
-        } else {}
+        } else {
+           setIsTRackingActive(true);
+           let currentLng = taskLng - 0.012;
+           let currentLat = taskLat - 0.012;
+
+           socket.emit('share_location', {
+           taskId: task._id,
+           coordinates: [currentLng, currentLat]
+        });
+           trackingIntervalRef.current = setInterval(() => {
+           currentLng += (taskLng - currentLng) * 0.08;
+           currentLat += (taskLat - currentLat) * 0.08;
+
+           socket.emit('share_location', {
+           taskId: task._id,
+           coordinates: [currentLat, currentLng]
+           });
+           if (Math.abs(taskLng - currentLng) < 0.0001 && Math.abs(taskLat - currentLat) < 0.0001) {
+           clearInterval(trackingIntervalRef.current);
+           setIsTRackingActive(false);
+           }
+        }, 2000);
+        }
+    };
     useEffect(() => {
         return () => {
             if (trackingIntervalRef.current)
@@ -407,6 +430,7 @@ export const TaskDetails: React.FC = () => {
                                 </div>
                             </>
                         )}
+                </div>
                 </div>
                 {/* Right Column: Actions & Chat */}
                 <div className="lg:col-span-1 space-y-6">
