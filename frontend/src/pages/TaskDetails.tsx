@@ -375,7 +375,12 @@ export const TaskDetails: React.FC = () => {
                             </div>
                             <div>
                                 <h4 className="font-bold text-white text-lg flex items-center gap-1.5">
-                                    {task.client.name}
+                                    <button
+                                    onClick={() => navigate(`/profile/${task.client._id}`)}
+                                    className="hover:text-brand-400 hover:underline transition-colors text-left"
+                                    >
+                                        {task.client.name}
+                                    </button>
                                     {task.client.isVerified && <ShieldCheck className="w-5 h-5 text-emerald-450"/>}
                                 </h4>
                                 <p className="text-xs text-slate-450">Client Profile</p>
@@ -491,7 +496,12 @@ export const TaskDetails: React.FC = () => {
                                                     <div className="flex items-center justify-between">
                                                         <div>
                                                             <span className="font-semibold text-white text-sm flex items-center gap-1">
-                                                                {bid.tasker.name}
+                                                               <button
+                                                               onClick={() => navigate(`/profile/${bid.tasker._id}`)}
+                                                               className="hover:text-brand-400 hover:underline transition-colors text-left"
+                                                               >
+                                                                   {bid.tasker.name}
+                                                               </button>
                                                                 {bid.tasker.isVerified && <ShieldCheck className="w-4 h-4 text-emerald-450"/>}
                                                             </span>
                                                             <span className="text-[10px] text-slate-450">

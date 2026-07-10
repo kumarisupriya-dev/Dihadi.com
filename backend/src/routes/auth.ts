@@ -183,4 +183,19 @@ Promise<void> => {
     }
 });
 
+router.get('/profile/:userId', authMiddleware, async (req: AuthRequest, res: Response):
+Promise<void> => {
+    try {
+        const userProfile = await User.findById(req.params.userId).select('name email isVerified rating reviewCount createdAt verificationStatus');
+        if (!userProfile) {
+            res.status(404).json({error: 'User profile not found.'});
+            return;
+        }
+        res.json(userProfile);
+    } catch (error) {
+        console.error('Fetch public profile error:', error);
+        res.status(500).json({error: 'Server error loading profile.'});
+    }
+});
+
 export default router;

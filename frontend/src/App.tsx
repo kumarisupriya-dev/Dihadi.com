@@ -12,6 +12,7 @@ import {Wallet} from './pages/Wallet';
 import {SocketProvider} from './context/SocketContext';
 import {ThemeProvider} from './context/ThemeContext';
 import {Verification} from './pages/Verification';
+import {Profile} from './pages/Profile';
 
 function App() {
     return (
@@ -70,6 +71,14 @@ function App() {
                             element={
                                 <ProtectedRoute>
                                     <Verification />
+                                </ProtectedRoute>
+                            }
+                            />
+                            <Route
+                            path="/profile/:userId"
+                            element={
+                                <ProtectedRoute>
+                                    <Profile />
                                 </ProtectedRoute>
                             }
                             />

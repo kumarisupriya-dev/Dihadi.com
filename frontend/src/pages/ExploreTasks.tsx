@@ -1,7 +1,7 @@
 import React, {useState, useEffect} from 'react';
 import {useNavigate} from 'react-router-dom';
-import {apiFetch} from '../utils/api.ts';
-import {MapPin, Search, Navigation, IndianRupee, Clock, Briefcase, Eye, AlertCircle} from 'lucide-react';
+import {apiFetch} from '../utils/api';
+import {MapPin, Navigation, Briefcase, Eye, AlertCircle} from 'lucide-react';
 import {MapContainer, TileLayer, Marker, Popup, useMap} from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
@@ -36,6 +36,7 @@ interface Task {
         coordinates: [number, number];
     };
     client: {
+        _id: string;
         name: string;
         rating: number;
         isVerified: boolean;
@@ -217,7 +218,17 @@ export const ExploreTasks: React.FC = () => {
                                         <h4 className="text-md font-bold text-white leading-snug">{task.title}</h4>
                                         <p className="text-xs text-slate-400 line-clamp-2">{task.address}</p>
                                         <div className="text-[10px] text-slate-500 flex items-center gap-1.5">
-                                            <span>Posted by {task.client.name}</span>
+                                            <span>Posted by
+                                            <button
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                navigate(`/profile/${task.client._id}`);
+                                            }}
+                                            className="font-bold text-slate-300 hover:text-brand-400 ml-1 transition-colors hover:underline"
+                                            >
+                                                {task.client.name}
+                                            </button>
+                                            </span>
                                             <span>•</span>
                                             <span>★ {task.client.rating > 0 ? task.client.rating.toFixed(1) : 'New'}</span>
                                         </div>
