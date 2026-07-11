@@ -67,7 +67,8 @@ interface Bid {
     bidAmount: number;
     estimatedTime: string;
     message?: string;
-    status: 'pending' | 'accepted' | 'rejected';
+    status: 'pending' | 'accepted' | 'rejected' | 'countered';
+    counterAmount?: number;
 }
 
 interface ChatMessage {
@@ -110,6 +111,49 @@ export const TaskDetails: React.FC = () => {
     const [taskerLocation, setTaskerLocation] = useState<[number, number] | null> (null);
     const [isTrackingActive, setIsTRackingActive] = useState(false);
     const trackingIntervalRef = useRef<any>(null);
+    const [counterValues, setCounterValues] = useState<{[bidId: string]: string}>({});
+
+    const handleCounterBid = async (bidId: string) => {
+        const amount = counterValues[bidId];
+        if (!amount || Number(amount) <= 0) {
+            alert('Please enter a valid counter-offer budget.');
+            return;
+        }
+        setError('');
+        try {
+            await apiFetch(`/bids/${bidId}/counter`, {
+                method: 'POST',
+                body: JSON.stringify({counterAmount: Number(amount)})
+            });
+            setCounterValues(prev => ({...prev, [bidId]: ''}));
+            await fetchTaskDetails();
+        } catch (err: any) {
+            setError(err.message || 'Failed to submit counter-offer.');
+        }
+    };
+
+    const handleAcceptCounter = async (bidId: string) => {
+        if (!window.confirm('Are you sure you want to accept this counter-offer? Hitting accept will hire you and lock thus payment in escrow.')) return;
+        setError('');
+        try {
+            await apiFetch(`/bids/${bidId}/accept-counter`, {method: 'POST'});
+            await refreshUser();
+            await fetchTaskDetails();
+        } catch (err: any) {
+            setError(err.message || 'Failed to accept counteer-offer');
+        }
+    };
+
+    const handleDeclineCounter = async (bidId: string) => {
+        if (!window.confirm('Are you sure you want to decline this counter-offer? This will reject your bid.')) return;
+        setError('');
+        try {
+            await apiFetch(`/bid/${bidId}/reject-counter`, {method: 'POST'});
+            await fetchTaskDetails();
+        } catch (err: any) {
+            setError(err.message || 'Failed to decline counter-offer.');
+        }
+    };
 
     const fetchTaskDetails = async () => {
         setLoading(true);
@@ -557,12 +601,36 @@ export const TaskDetails: React.FC = () => {
                                                         <Clock className="w-3.5 h-3.5"/>
                                                         <span>Ready in: {bid.estimatedTime}</span>
                                                     </div>
-                                                    <button
-                                                    onClick={() => handleAcceptBid(bid._id)}
-                                                    className="w-full bg-brand-500 hover:bg-brand-600 text-white font-bold py-2 rounded-xl text-xs transition-colors duration-200 shadow-md"
-                                                    >
-                                                        Accept & Hire
-                                                    </button>
+                                                       {bid.status === 'pending' && (
+                                                           <div className="flex gap-2">
+                                                               <button
+                                                                onClick={() => handleAcceptBid(bid._id)}
+                                                                className="flex-grow bg-brand-500 hover:bg-brand-600 text-white font-bold py-2 rounded-xl text-xs transition-colors duration-200 shadow-md"
+                                                               >
+                                                                   Accept & Hire
+                                                               </button>
+                                                               <div className="flex gap-1.5 flex-grow">
+                                                                   <input
+                                                                   type="number"
+                                                                   placeholder="Counter ₹"
+                                                                   value={counterValues[bid._id] || ''}
+                                                                   onChange={(e) => setCounterValues(prev => ({...prev, [bid._id]: e.target.value}))}
+                                                                   className="w-24 bg-slate-950 border border-slate-850 focus:border-indigo-500 rounded-xl px-2.5 text-xs text-white focus:outline-none"
+                                                                   />
+                                                                   <button
+                                                                   onClick={() => handleCounterBid(bid._id)}
+                                                                   className="bg-indigo-650 hover:bg-indigo-750 text-white font-bold px-3 py-2 rounded-xl text-xs transition-colors"
+                                                                   >
+                                                                       Counter
+                                                                   </button>
+                                                               </div>
+                                                           </div>
+                                                       )}
+                                                    {bid.status === 'countered' && (
+                                                        <div className="text-center bg-indigo-500/5 border border-indigo-500/10 rounded-xl p-2 text-[10px] text-indigo-400 font-semibold">
+                                                            Countered: ₹{bid.counterAmount} (Pending Earner Response)
+                                                        </div>
+                                                    )}
                                                 </div>
                                             ))}
                                         </div>
@@ -674,7 +742,7 @@ export const TaskDetails: React.FC = () => {
                                             rows={3}
                                             value={message}
                                             onChange={(e) => setMessage(e.target.value)}
-                                            placeholder="Why should the client hire you?"
+                                            placeholder="why should the client hire you?"
                                             className="w-full bg-slate-950 border border-slate-850 focus:border-emerald-500 rounded-xl py-2 pl-9 pr-3 text-white text-sm focus:outline-none transition-colors duration-200 resize-none"
                                             />
                                         </div>
@@ -693,7 +761,28 @@ export const TaskDetails: React.FC = () => {
                             {task.status === 'open' && myBid && (
                                 <div className="text-center py-4 space-y-3">
                                     <h3 className="text-md font-bold text-white">Your Placed Offer</h3>
-                                    <div className="bg-slate-950/40 border border-slate-850 rounded-2xl p-4 space-y-2 text-left">
+                                    {/* Counter-offer actions for tasker */}
+                                    {myBid.status === 'countered' && (
+                                        <div className="bg-indigo-500/5 border border-indigo-500/25 rounded-2xl p-4 space-y-3 text-center my-3">
+                                            <p className="text-xs font-bold text-indigo-400">Client countered your bid with an offer of:</p>
+                                            <span className="text-2xl font-black text-white block">₹{myBid.counterAmount}</span>
+                                            <div className="flex gap-2">
+                                                <button
+                                                onClick={() => handleAcceptCounter(myBid._id)}
+                                                className="flex-grow bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-2 rounded-xl text-xs transition-colors duration-200"
+                                                >
+                                                    Accept Counter
+                                                </button>
+                                                <button
+                                                onClick={() => handleDeclineCounter(myBid._id)}
+                                                className="flex-grow bg-rose-600 hover:bg-rose-700 text-white font-bold py-2 rounded-xl text-xs transition-colors duration-200"
+                                                >
+                                                    Decline
+                                                </button>
+                                            </div>
+                                        </div>
+                                    )}
+                                    <div className="bg-slate-955/40 border border-slate-850 rounded-2xl p-4 space-y-2 text-left">
                                         <div className="flex justify-between items-center text-sm font-semibold">
                                             <span className="text-slate-400">Offer Amount:</span>
                                             <span className="text-emerald-400 font-bold">₹{myBid.bidAmount}</span>
@@ -707,28 +796,22 @@ export const TaskDetails: React.FC = () => {
                                             <span className="text-amber-400 capitalize">{myBid.status}</span>
                                         </div>
                                     </div>
-                                    <p className="text-xs text-slate-550">
-                                        Waiting for the client to review and accept.
-                                    </p>
+                                    <p className="text-xs text-slate-550">Waiting for the client to review and accept.</p>
                                 </div>
                             )}
-                            {/* task is assigned to someone else */}
+                            {/* Task is assigned to someone else */}
                             {task.status === 'assigned' && task.assignedTasker?._id !== user.id && (
-                                <p className="text-slate-450 text-sm text-center py-4">
-                                    This task has been assigned to another tasker.
-                                </p>
+                                <p className="text-slate-455 text-sm text-center py-4">This task has been assigned to another tasker.</p>
                             )}
                             {/* Task is assigned to the current user */}
                             {task.status === 'assigned' && task.assignedTasker?._id === user.id && (
-                                <div className="text-center py-4 space-y-3 bg-emerald-500/5 border border-emerald-500/10 rounded-2xl p-4">
+                                <div className="text-center py-4 space-y-3 bg-emerald-500/5 border border border-emerald-500/10 rounded-2xl p-4">
                                     <h3 className="text-md font-extrabold text-emerald-400">You are hired!</h3>
-                                    <p className="text-xs text-slate-350">
-                                        Your live chat is now active. Communicate with the client to complete this task.
-                                    </p>
+                                    <p className="text-xs text-slate-350">Your live chat is now active. Communicate with the client to complete this task.</p>
                                     <button
                                     onClick={toggleLocationSharing}
                                     className={`w-full font-bold py-2 rounded-xl text-xs transition-all duration-200 shadow-md border ${
-                                        isTrackingActive ? 'bg-rose-600/15 border-rose-500/20 text-rose-455 hover:bg-rose-600/20' :
+                                        isTrackingActive ? 'bg-rose-600/15 border-rose-500/20 text-rose-455 hover:bg-rose-600/20' : 
                                             'bg-emerald-600 hover:bg-emerald-700 border-emerald-700 text-white'
                                     }`}
                                     >
@@ -738,9 +821,7 @@ export const TaskDetails: React.FC = () => {
                             )}
                             {/* Task is completed */}
                             {task.status === 'completed' && (
-                                <p className="text-slate-450 text-sm text-center py-4">
-                                    This errand is marked completed.
-                                </p>
+                                <p className="text-slate-450 text-sm text-center py-4">This errand is marked completed.</p>
                             )}
                         </div>
                     )}

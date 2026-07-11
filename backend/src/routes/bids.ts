@@ -203,7 +203,7 @@ Promise<void> => {
     }
 });
 
-router.post('/:id/accpt-counter', authMiddleware, async(req: AuthRequest, res: Response):
+router.post('/:id/accept-counter', authMiddleware, async(req: AuthRequest, res: Response):
 Promise<void> => {
     try {
         const bid = await Bid.findById(req.params.id);
