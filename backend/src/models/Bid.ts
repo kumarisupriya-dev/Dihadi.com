@@ -6,7 +6,8 @@ export interface IBid extends Document {
     bidAmount: number;
     estimatedTime: string;
     message?: string;
-    status: 'pending' | 'accepted' | 'rejected';
+    status: 'pending' | 'accepted' | 'rejected' | 'countered';
+    counterAmount?: number;
     createdAt: Date;
 }
 
@@ -16,7 +17,8 @@ const BidSchema: Schema = new Schema({
     bidAmount: {type: Number, required: true, min: 1},
     estimatedTime: {type: String, required: true},
     message: {type: String},
-    status: {type: String, enum: ['pending', 'accepted', 'rejected'], default: 'pending'},
+    status: {type: String, enum: ['pending', 'accepted', 'rejected', 'countered'], default: 'pending'},
+    counterAmount: {type: Number},
     createdAt: {type: Date, default: Date.now}
 });
 BidSchema.index({task: 1, tasker: 1}, {unique: true});
