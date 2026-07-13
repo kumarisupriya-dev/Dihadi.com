@@ -164,5 +164,222 @@ Promise<void> => {
     }
 });
 
+router.post('/:id/submit-proof', authMiddleware, async (req: AuthRequest, res: Response):
+Promise<void> => {
+    try {
+        const {documentBase64, comment} = req.body;
+        if (!documentBase64) {
+            res.status(400).json({error: 'Please upload an image as proof of completion.'});
+            return;
+        }
+        const task = await Task.findById(req.params.id);
+        if (!task) {
+            res.status(404).json({error: 'Errand not found.'});
+            return;
+        }
+        if (task.status !== 'assigned') {
+            res.status(400).json({error: 'Proof can only be submitted for assigned, in-progress tasks.'});
+            return;
+        }
+        if (task.assignedTasker?.toString() !== req.userId) {
+            res.status(403).json({error: 'Only the assigned tasker can submit completion proof.'});
+            return;
+        }
+        task.completionProof = {
+            documentBase64,
+            comment,
+            submittedAt: new Date()
+        };
+        await task.save();
+        const proofNotification = new Notification({
+            user: task.client,
+            title: 'Completion Proof Submitted! 📸',
+            body: `Tasker submitted photo proof for errand: "${task.title}". Review it now.`,
+            type: 'bid_received',
+            task: task._id
+        });
+        await proofNotification.save();
+
+        const io = req.app.get('io');
+        io.to(task.client.toString()).emit('new_notification', proofNotification);
+        res.json({message: 'Completion proof submitted successfully.', task});
+    } catch (error) {
+        console.error('Submit proof error:', error);
+        res.status(500).json({error: 'Server error submitting completion proof.'});
+    }
+});
+
+router.post('/:id/dispute', authMiddleware, async (req: AuthRequest, res: Response):
+Promise<void> => {
+    try {
+        const {reason} = req.body;
+        if (!reason) {
+            res.status(400).json({error: 'Please specify a reason for raising the dispute.'});
+            return;
+        }
+        const task = await Task.findById(req.params.id);
+        if (!task) {
+            res.status(404).json({error: 'Errand not found.'});
+            return;
+        }
+        if (task.status !== 'assigned') {
+            res.status(400).json({error: 'Disputes can only be raised on in-progress errands.'});
+            return;
+        }
+        if (task.client.toString() !== req.userId) {
+            res.status(403).json({error: 'Only the client can dispute this errand.'});
+            return;
+        }
+        task.status = 'disputed';
+        task.disputeReason = reason;
+        await task.save();
+
+        if (task.assignedTasker) {
+            const disputeNotification = new Notification({
+                user: task.assignedTasker,
+                title: 'Errand Disputed! ⚠️',
+                body: `Client raised a dispute for: "${task.title}". Escrow funds are locked.`,
+                type: 'bid_received',
+                task: task._id
+            });
+            await disputeNotification.save();
+            const io = req.app.get('io');
+            io.to(task.assignedTasker.toString()).emit('new_notification', disputeNotification);
+        }
+        res.json({message: 'Dispute raised. Funds are frozen in escrow for administrator review.', task});
+    } catch (error) {
+        console.error('Raise dispute error:', error);
+        res.status(500).json({error: 'Server error raising dispute.'});
+    }
+});
+
+router.get('/disputed-errands', authMiddleware, async (req: AuthRequest, res: Response):
+Promise<void> => {
+    try {
+        const adminUser = await User.findById(req.userId);
+        if (!adminUser || !adminUser.isAdmin) {
+            res.status(403).json({error: 'Admin access denied.'});
+            return;
+        }
+        const disputedTasks = await Task.find({status: 'disputed'})
+            .populate('client', 'name email rating')
+            .populate('assignedTasker', 'name email rating');
+        res.json(disputedTasks);
+    } catch (error) {
+        console.error('Fetch disputed tasks error:', error);
+        res.status(500).json({error: 'Server error loading disputed tasks.'});
+    }
+});
+
+router.post('/:id/resolve-dispute', authMiddleware, async (req: AuthRequest, res: Response):
+Promise<void> => {
+    try {
+        const {action} = req.body;
+        if (!action || !['release_to_tasker', 'refund_to_client'].includes(action)) {
+            res.status(400).json({error: 'Please specify a valid dispute resolution action.'});
+            return;
+        }
+        const adminUser = await User.findById(req.userId);
+        if (!adminUser || !adminUser.isAdmin) {
+            res.status(403).json({error: 'Admin access denied.'});
+            return;
+        }
+        const task = await Task.findById(req.params.id);
+        if (!task || task.status !== 'disputed') {
+            res.status(400).json({error: 'Task is not currently disputed.'});
+            return;
+        }
+        const escrow = task.escrowAmount;
+        if(escrow <= 0) {
+            res.status(400).json({error: 'No locked escrow amount exists for this dispute.'});
+            return;
+        }
+        const client = await User.findById(task.client);
+        const tasker = await User.findById(task.assignedTasker);
+
+        if(!client || !tasker) {
+            res.status(404).json({error: 'Client or Tasker accounts not found.'});
+            return;
+        }
+        const io = req.app.get('io');
+        if (action === 'release_to_tasker') {
+            tasker.walletBalance += escrow;
+            await tasker.save();
+
+            const taskerTx = new Transaction({
+                user: tasker._id,
+                amount: escrow,
+                type: 'payment_received',
+                task: task._id,
+                description: `Dispute Resolution: Payout released for completed work on: "${task.title}"`
+            });
+            await taskerTx.save();
+
+            task.status = 'completed';
+            task.escrowAmount = 0;
+            await task.save();
+
+            const taskerNotif = new Notification({
+                user: tasker._id,
+                title: 'Escrow Payout Credited! 💰',
+                body: `Moderators resolved dispute for: "${task.title}" in your favor. ₹${escrow} credited.`,
+                type: 'payment_released',
+                task: task._id
+            });
+            await taskerNotif.save();
+            io.to(tasker._id.toString()).emit('new_notification', taskerNotif);
+
+            const clientNotif = new Notification({
+                user: client._id,
+                title: 'Dispute Resolved (Escrow Released ⚖️',
+                body: `Moderators resolved dispute for: "${task.title}". Escrow was released to the tasker.`,
+                type: 'payment_released',
+                task: task._id
+            });
+            await clientNotif.save();
+            io.to(client._id.toString()).emit('new_notification', clientNotif);
+        } else if (action === 'refund_to_client') {
+            client.walletBalance += escrow;
+            await client.save();
+
+            const clientTx = new Transaction({
+                user: client._id,
+                amount: escrow,
+                type: 'deposit',
+                task: task._id,
+                description: `Dispute Refund: Escrow returned from resolved dispute on: "${task.title}"`
+            });
+            await clientTx.save();
+
+            task.status = 'completed';
+            task.escrowAmount = 0;
+            await task.save();
+
+            const taskerNotif = new Notification({
+                user: tasker._id,
+                title: 'Dispute Resolved (Escrow Refunded) ❌',
+                body: `Moderators refunded client budget escrow for: "${task.title}".`,
+                type: 'payment_released',
+                task: task._id
+            });
+            await taskerNotif.save();
+            io.to(tasker._id.toString()).emit('new_notification', taskerNotif);
+
+            const clientNotif = new Notification({
+                user: client._id,
+                title: 'Escrow Refund Credited! 💰',
+                body: `Moderators refunded escrow for: "${task.title}". ₹${escrow} returned to wallet.`,
+                type: 'payment_released',
+                task: task._id
+            });
+            await clientNotif.save();
+            io.to(client._id.toString()).emit('new_notification', clientNotif);
+        }
+        res.json({message: `Dispute resolved successfully with action: ${action}.`, task});
+    } catch (error) {
+        console.error('Resolve dispute error:', error);
+        res.status(500).json({error: 'Server error resolving dispute.'});
+    }
+});
 
 export default router;

@@ -4,16 +4,22 @@ export interface ITask extends Document {
     title: string;
     description: string;
     category: string;
-    budget: number;
+    budget: string;
     location: {
         type: 'Point';
         coordinates: [number, number];
     };
     address: string;
-    status: 'open' | 'assigned' | 'completed';
+    status: 'open' | 'assigned' | 'completed' | 'disputed';
     client: mongoose.Types.ObjectId;
     assignedTasker?: mongoose.Types.ObjectId;
     escrowAmount: number;
+    completionProof?: {
+        documentBase64: string;
+        comment?: string;
+        submittedAt: Date;
+    };
+    disputeReason?: string;
     createdAt: Date;
 }
 
@@ -24,13 +30,23 @@ const TaskSchema: Schema = new Schema({
     budget: {type: Number, required: true, min: 1},
     location: {
         type: {type: String, enum: ['Point'], default: 'Point', required: true},
-        coordinates: {type: [Number], required: true, index:'2dsphere'},
+        coordinates: {type: [Number], required: true, index: '2dsphere'},
     },
     address: {type: String, required: true},
-    status: {type: String, enum: ['open', 'assigned', 'completed'], default: 'open'},
+    status: {
+        type: String,
+        enum: ['open', 'assigned', 'completed', 'disputed'],
+        default: 'open'
+    },
     client: {type: Schema.Types.ObjectId, ref: 'User', required: true},
     assignedTasker: {type: Schema.Types.ObjectId, ref: 'User'},
     escrowAmount: {type: Number, default: 0},
+    completedProof: {
+        documentBase64: {type: String},
+        comment: {type: String},
+        submittedAt: {type: Date}
+    },
+    disputeReason: {type: String},
     createdAt: {type: Date, default: Date.now}
 });
 
