@@ -37,7 +37,7 @@ interface Task {
     location: {
         coordinates: [number, number];
     };
-    status: 'open' | 'assigned' | 'completed';
+    status: 'open' | 'assigned' | 'completed' | 'disputed';
     createdAt: string;
     client: {
         _id: string;
@@ -53,6 +53,13 @@ interface Task {
         rating: number;
         isVerified: boolean;
     };
+    escrowAmount: number;
+    completionProof?: {
+        documentBase64: string;
+        comment?: string;
+        submittedAt: string;
+    };
+    disputeReason?: string;
 }
 
 interface Bid {
@@ -112,6 +119,59 @@ export const TaskDetails: React.FC = () => {
     const [isTrackingActive, setIsTRackingActive] = useState(false);
     const trackingIntervalRef = useRef<any>(null);
     const [counterValues, setCounterValues] = useState<{[bidId: string]: string}>({});
+    const [proofComment, setProofComment] = useState('');
+    const [proofSubmitting, setProofSubmitting] = useState(false);
+    const [disputeReasonInput, setDisputeReasonInput] = useState('');
+    const [isDisputing, setIsDisputing] = useState(false);
+    const [disputeSubmitting, setDisputeSubmitting] = useState(false);
+
+    const handleProofUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+        setProofSubmitting(true);
+        setError('');
+
+        const reader = new FileReader();
+        reader.readAsDataURL(file);
+        reader.onload = async () => {
+            try {
+                const base64Str = reader.result as string;
+                await apiFetch(`/tasks/${task?._id}/submit-proof`, {
+                    method: 'POST',
+                    body: JSON.stringify({
+                        documentBase64: base64Str,
+                        comment: proofComment
+                    })
+                });
+                setProofComment('');
+                await fetchTaskDetails();
+            } catch (err: any) {
+                setError(err.message || 'Failed to submit proof.');
+            } finally {
+                setProofSubmitting(false);
+            }
+        };
+    };
+
+    const handleRaiseDispute = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!disputeReasonInput.trim() || disputeSubmitting) return;
+        setDisputeSubmitting(true);
+        setError('');
+        try {
+            await apiFetch(`/tasks/${task?._id}/dispute`, {
+                method: 'POST',
+                body: JSON.stringify({reason: disputeReasonInput})
+            });
+            setIsDisputing(false);
+            setDisputeReasonInput('');
+            await fetchTaskDetails();
+        } catch (err: any) {
+            setError(err.message || 'Failed to raise dispute.');
+        } finally {
+            setDisputeSubmitting(false);
+        }
+    };
 
     const handleCounterBid = async (bidId: string) => {
         const amount = counterValues[bidId];
@@ -542,27 +602,88 @@ export const TaskDetails: React.FC = () => {
                     {isOwner && (
                         <div className="bg-slate-900 border border-slate-800 rounded-3xl p-6 shadow-xl space-y-6">
                             {task.status === 'assigned' ? (
-                                <div className="space-y-4 text-center">
-                                    <h3 className="text-lg font-bold text-white">Errand in Progress</h3>
-                                    <p className="text-xs text-slate-450">
-                                        Tasker <span className="font-bold text-white">{task.assignedTasker?.name}</span> is hired.
-                                    </p>
-                                    <button
-                                    onClick={async () => {
-                                        if (!window.confirm('Are you sure you want to mark this task as completed and release the locked escrow payment to the tasker?')) return;
-                                        setError('');
-                                        try {
-                                            await apiFetch(`/tasks/${task._id}/complete`, {method: 'POST'});
-                                            await refreshUser();
-                                            await fetchTaskDetails();
-                                    } catch (err: any) {
-                                            setError(err.message || 'Failed to complete task.');
-                                        }
-                                    }}
-                                    className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 rounded-xl text-sm transition-colors duration-200 shadow-md"
-                                    >
-                                        Confirm Job Done & Pay
-                                    </button>
+                                <div className="space-y-4">
+                                    <h3 className="text-lg font-bold text-white text-center">Errand in Progress</h3>
+                                    {task.completionProof ? (
+                                        <div className="bg-slate-950/60 border border-slate-800 p-4 rounded-2xl space-y-3">
+                                            <span className="text-[10px] text-brand-400 font-bold uppercase tracking-wider block">
+                                                 📸 Tasker Completion Verification Proof
+                                            </span>
+                                            {task.completionProof.documentBase64 && (
+                                                <div className="border border-slate-850 rounded-xl overflow-hidden bg-slate-950 max-h-48 flex items-center justify-center">
+                                                    <img
+                                                    src={task.completionProof.documentBase64}
+                                                    alt="Completion Proof File"
+                                                    className="w-full h-auto max-h-48 object-contain"
+                                                    />
+                                                </div>
+                                            )}
+                                            {task.completionProof.comment && (
+                                                <p className="text-xs text-slate-300 italic">"{task.completionProof.comment}"</p>
+                                            )}
+                                        </div>
+                                    ): (
+                                        <p className="text-xs text-slate-450 text-center">
+                                            Tasker <span className="font-bold text-white">{task.assignedTasker?.name}</span> is hired. Waiting for work completion.
+                                        </p>
+                                    )}
+                                    {/* Action Buttons */}
+                                    {!isDisputing ? (
+                                        <div className="flex gap-2">
+                                            <button
+                                            onClick={async () => {
+                                                if (!window.confirm('Are you sure you want to mark this task as completed and release the locked escrow payment to the tasker?')) return;
+                                                setError('');
+                                                try {
+                                                    await apiFetch(`/tasks/${task._id}/complete`, {method: 'POST'});
+                                                    await refreshUser();
+                                                    await fetchTaskDetails();
+                                                } catch (err: any) {
+                                                    setError(err.message || 'Failed to complete task.');
+                                                }
+                                            }}
+                                            className="flex-grow bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 rounded-xl text-sm transition-colors duration-200 shadow-md"
+                                            >
+                                                Confirm Job Done & Pay
+                                            </button>
+                                            <button
+                                            onClick={() => setIsDisputing(true)}
+                                            className="bg-rose-600/10 hover:bg-rose-600/20 border border-rose-500/20 text-rose-455 font-bold px-4 rounded-xl text-sm transition-colors"
+                                            >
+                                                Dispute
+                                            </button>
+                                        </div>
+                                    ): (
+                                        <form onSubmit={handleRaiseDispute}
+                                        className="bg-slate-950/40 border border-slate-850 p-4 rounded-2xl space-y-3"
+                                        >
+                                            <h4 className="text-xs font-bold text-white uppercase">Raise Dispute & Freeze Escrow</h4>
+                                            <textarea
+                                            required
+                                            rows={2}
+                                            value={disputeReasonInput}
+                                            onChange={(e) => setDisputeReasonInput(e.target.value)}
+                                            placeholder="Provide reason for dispute (e.g. unfinished work, dmagae)..."
+                                            className="w-full bg-slate-950 border border-slate-850 focus:border-rose-500 rounded-xl py-2 px-3 text-xs focus:outline-none transition-colors duration-200 resize-none"
+                                            />
+                                            <div className="flex gap-2">
+                                                <button
+                                                type="submit"
+                                                disabled={disputeSubmitting}
+                                                className="flex-grow bg-rose-600 hover:bg-rose-700 text-white font-bold py-1.5 rounded-lg text-xs transition-colors"
+                                                >
+                                                    {disputeSubmitting ? 'Raising Dispute...' : 'Confirm Dispute'}
+                                                </button>
+                                                <button
+                                                type="button"
+                                                onClick={() => setIsDisputing(false)}
+                                                className="bg-slate-800 hover:bg-slate-750 ext-white font-bold px-3 py-1.5 rounded-lg text-xs transition-colors"
+                                                >
+                                                    Cancel
+                                                </button>
+                                            </div>
+                                        </form>
+                                    )}
                                 </div>
                             ) : task.status === 'open' ? (
                                 <>
@@ -805,18 +926,60 @@ export const TaskDetails: React.FC = () => {
                             )}
                             {/* Task is assigned to the current user */}
                             {task.status === 'assigned' && task.assignedTasker?._id === user.id && (
-                                <div className="text-center py-4 space-y-3 bg-emerald-500/5 border border border-emerald-500/10 rounded-2xl p-4">
-                                    <h3 className="text-md font-extrabold text-emerald-400">You are hired!</h3>
-                                    <p className="text-xs text-slate-350">Your live chat is now active. Communicate with the client to complete this task.</p>
-                                    <button
-                                    onClick={toggleLocationSharing}
-                                    className={`w-full font-bold py-2 rounded-xl text-xs transition-all duration-200 shadow-md border ${
-                                        isTrackingActive ? 'bg-rose-600/15 border-rose-500/20 text-rose-455 hover:bg-rose-600/20' : 
-                                            'bg-emerald-600 hover:bg-emerald-700 border-emerald-700 text-white'
-                                    }`}
-                                    >
-                                        {isTrackingActive ? 'Stop Live Location Sharing' : 'Start Live Location Sharing'}
-                                    </button>
+                                <div className="space-y-4">
+                                    <div className="text-center py-4 space-y-3 bg-emerald-500/5 border border-emerald-500/10 rounded-2xl p-4">
+                                        <h3 className="text-md font-extrabold text-emerald-400">You are hired!</h3>
+                                        <p className="text-xs text-slate-350">Your live chat is now active. Communicate with the client to complete this task.</p>
+                                        <button
+                                        onClick={toggleLocationSharing}
+                                        className={`w-full font-bold py-2 rounded-xl text-xs transition-all duration-200 shadow-md border ${
+                                            isTrackingActive ? 'bg-rose-600/15 border-rose-500/20 text-rose-455 hover:bg-rose-600/20' : 
+                                                'bg-emerald-600 hover:bg-emerald-700 border-emerald-700 text-white'
+                                        }`}
+                                        >
+                                            {isTrackingActive ? 'Stop Live Location Sharing' : 'Start Live Location Sharing'}
+                                        </button>
+                                    </div>
+                                    {/* Completion proof form */}
+                                    {task.completionProof ? (
+                                        <div className="bg-emerald-500/5 border border-emerald-500/10 p-4 rounded-2xl text-center text-xs text-emerald-450 font-bold">
+                                            ✓ Completion proof uploaded. Waiting for client to confirm payout.
+                                        </div>
+                                    ) : (
+                                        <div className="bg-slate-950/40 border border-slate-850 p-4 rounded-2xl space-y-3">
+                                            <h4 className="text-xs font-bold text-white uppercase">Upload Completion Verification</h4>
+                                            <textarea
+                                            rows={2}
+                                            value={proofComment}
+                                            onChange={(e) => setProofComment(e.target.value)}
+                                            placeholder="Add a comment or description of completed work..."
+                                            className="w-full bg-slate-950 border border-slate-850 focus:border-brand-500 rounded-xl py-2 px-3 text-white text-xs focus:outline-none transition-clors resize-none"
+                                            />
+                                            <div className="border-2 border-dashed border-slate-800 rounded-xl p-4 hover:border-brand-500/40 transition-colors cursor-pointer relative bg-slate-950/20 text-center">
+                                                <input
+                                                type="file"
+                                                accept="image/*"
+                                                onChange={handleProofUpload}
+                                                className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                                                disabled={proofSubmitting}
+                                                />
+                                                <span className="text-[10px] font-bold text-slate-300">{proofSubmitting ? 'Uploading image...' : 'Click to Upload Work Verification Photo'}</span>
+                                            </div>
+                                        </div>
+                                    )}
+                                </div>
+                            )}
+                            {/* Task is disputed banner */}
+                            {task.status === 'disputed' && (
+                                <div className="bg-rose-500/5 border border-rose-500/15 rounded-3xl p-6 shadow-xl space-y-3 text-center">
+                                    <div className="w-8 h-8 rounded-full bg-rose-500/10 flex items-center justify-center text-rose-500 mx-auto animate-pulse">⚠️</div>
+                                    <h4 className="text-sm font-bold text-white">Errand Under Dispute</h4>
+                                    <p className="text-[10px] text-slate-400 leading-relaxed">
+                                        This errand was placed under dispute by the client. Locked budget escrow(₹{task.budget}) is frozen. Moderators are reviewing.
+                                    </p>
+                                    {task.disputeReason && (
+                                        <div  className="bg-slate-950/50 border border-slate-850 p-3 rounded-xl text-left text-xs itlaic text-slate-300">Reason : "{task.disputeReason}"</div>
+                                    )}
                                 </div>
                             )}
                             {/* Task is completed */}

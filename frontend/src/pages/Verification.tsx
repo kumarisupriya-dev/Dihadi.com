@@ -1,13 +1,26 @@
 import React, {useState, useEffect} from 'react';
 import {useAuth} from '../context/Authcontext';
 import {apiFetch} from '../utils/api.ts';
-import {ShieldCheck, Upload, AlertCircle, Sparkles, Check, X, ShieldAlert} from 'lucide-react';
+import {ShieldCheck, Upload, AlertCircle, Sparkles, Check, X, ShieldAlert, Scale, HelpCircle} from 'lucide-react';
 
 interface PendingUser {
     _id: string;
     name: string;
     email: string;
     verificationDocument: string;
+}
+
+interface DisputedTask {
+    _id: string;
+    title: string;
+    budget: number;
+    disputeReason: string;
+    client: {name: string; email: string;};
+    assignedTasker: {name: string; email: string};
+    completionProof?: {
+        documentBase64: string;
+        comment?: string;
+    };
 }
 
 export const Verification: React.FC = () => {
@@ -17,6 +30,44 @@ export const Verification: React.FC = () => {
     const [pendingQueue, setPendingQueue] = useState<PendingUser[]>([]);
     const [error, setError] = useState('');
     const [message, setMessage] = useState('');
+    const [disputedQueue, setDisputedQueue] = useState<DisputedTask[]>([]);
+    const [loadingDisputes, setLoadingDisputes] = useState(false);
+
+    const fetchDisputedQueue = async () => {
+        if (!user?.isAdmin) return;
+        setLoadingDisputes(true);
+        try {
+            const data = await apiFetch('/tasks/disputed-errands');
+            setDisputedQueue(data);
+        } catch (err: any) {
+            setError(err.message || 'Failed to load disputed errands.');
+        } finally {
+            setLoadingDisputes(false);
+        }
+    };
+
+    useEffect(() => {
+        if (user?.isAdmin) {
+            fetchPendingQueue();
+            fetchDisputedQueue();
+        }
+    }, [user]);
+
+    const handleResolveDispute = async (taskId: string, action: 'release_to_tasker' | 'refund_to_client') => {
+        setError('');
+        setMessage('');
+        try {
+            await apiFetch(`/tasks/${taskId}/resolve-dispute`, {
+                method: 'POST',
+                body: JSON.stringify({action}),
+            });
+            setMessage(`Dispute resolved successfully.`);
+            await fetchDisputedQueue();
+            await refreshUser();
+        } catch (err: any) {
+            setError(err.message || 'Dispute resolution failed.');
+        }
+    };
 
     const fetchPendingQueue = async () => {
         if (!user?.isAdmin) return;
@@ -207,6 +258,73 @@ export const Verification: React.FC = () => {
                                             />
                                         </div>
                                     )}
+                                </div>
+                            ))}
+                        </div>
+                    )}
+                </div>
+            )}
+            {user.isAdmin && (
+                <div className="bg-slate-900 border border-slate-800 rounded-3xl p-8 shadow-xl space-y-6 mt-8">
+                    <h3 className="text-lg font-black text-white border-b border-slate-800 pb-2 flex items-center gap-2">
+                        <Scale className="w-5 h-5 text-indigo-400"/>
+                        Admin Escrow Disputes Queue ({disputedQueue.length})
+                    </h3>
+                    {loadingDisputes ? (
+                        <div className="flex items-center justify-center py-10">
+                            <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-brand-500"></div>
+                        </div>
+                    ) : disputedQueue.length === 0 ? (
+                        <p className="text-xs text-slate-550 text-center py-8">No active escrow disputes to resolve.</p>
+                    ) : (
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            {disputedQueue.map((task) => (
+                                <div key={task._id} className="bg-slate-950/40 border border-slate-850 p-5 rounded-2xl flex flex-col gap-4">
+                                    <div>
+                                        <span className="text-[10px] text-indigo-400 font-bold bg-indigo-500/10 border border-indigo-500/20 px-2 py-0.5 rounded uppercase block w-max mb-1">Frozen Escrow: ₹{task.budget}</span>
+                                        <h4 className="font-extrabold text-sm text-white">{task.title}</h4>
+                                        <div className="text-[10px] text-slate-500 mt-1 space-y-0.5">
+                                            <p>Client: <span className="text-slate-300 font-semibold">{task.assignedTasker.name}</span>({task.assignedTasker.email})</p>
+                                        </div>
+                                    </div>
+                                    {/* Dispute Reason */}
+                                    <div className="bg-rose-500/5 border border-rose-500/10 p-3 rounded-xl">
+                                        <span className="text-[9px] font-bold text-rose-500 block uppercase">Dispute Statement:</span>
+                                        <p className="text-xs text-slate-300 italic mt-0.5">"{task.disputeReason}"</p>
+                                    </div>
+                                    {/* Completion proof display */}
+                                    {task.completionProof?.documentBase64 && (
+                                        <div className="space-y-1.5">
+                                            <span className="text-[9px] font-bold text-indgio-400 block uppercase">Uploaded Completion Proof:</span>
+                                            <div className="border border-slate-850 rounded-xl overflow-hidden bg-slate-950 max-h-40 flex items-center justify-center">
+                                                <img
+                                                src={task.completionProof.documentBase64}
+                                                alt="KYC Completion Proof"
+                                                className="w-full h-auto max-h-40 object-contain"
+                                                />
+                                            </div>
+                                            {task.completionProof.comment && (
+                                                <p className="text-[10px] text-slate-400 italic">Comment: "{task.completionProof.comment}"</p>
+                                            )}
+                                        </div>
+                                    )}
+                                    {/* Dispute Resolution Buttons */}
+                                    <div className="flx gap-2 border-t border-slate-850 pt-3">
+                                        <button
+                                        onClick={() => handleResolveDispute(task._id, 'release_to_tasker')}
+                                        className="flex-grow bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-2 rounded-xl text-xs transition-colors flex items-center justify-center gap-1"
+                                        >
+                                            <Check className="w-3.5 h-3.5"/>
+                                            Release to Tasker
+                                        </button>
+                                        <button
+                                        onClick={() => handleResolveDispute(task._id, 'refund_to_client')}
+                                        className="flex-grow bg-rose-600 hover:bg-rose-700 text-white font-bold py-2 rounded-xl text-xs transition-colors flex items-center justify-center gap-1"
+                                        >
+                                            <X className="w-3.5 h-3.5"/>
+                                            Refund Client
+                                        </button>
+                                    </div>
                                 </div>
                             ))}
                         </div>
