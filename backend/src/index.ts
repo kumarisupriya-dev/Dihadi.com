@@ -58,19 +58,20 @@ io.on('connection', (socket) => {
         {io.to(data.taskId).emit('location_update', data.coordinated);
     });
 
-    socket.on('Send_message', async (data: {taskId: string; senderId: string;  text: string}) => {
+    socket.on('send_message', async (data: {taskId: string; senderId: string; text?: string; attachment?: string}) => {
         try {
-            const {taskId, senderId, text} = data;
+            const {taskId, senderId, text, attachment} = data;
             const newMessage = new Message({
                 task: taskId,
                 sender: senderId,
-                text
+                text,
+                attachment
             });
             await newMessage.save();
             const populatedMsg = await newMessage.populate('sender', 'name');
             io.to(taskId).emit('receive_message', populatedMsg);
         } catch (err) {
-            console.error('Socket message save error:', err);
+            console.error('Socket message save error:', err)
         }
     });
     socket.on('disconnect', () => {
