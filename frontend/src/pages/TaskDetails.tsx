@@ -3,7 +3,7 @@ import {useParams, useNavigate} from 'react-router-dom';
 import {useAuth} from '../context/Authcontext';
 import {apiFetch} from '../utils/api';
 import {io} from 'socket.io-client';
-import {IndianRupee, Clock, MessageSquare, ShieldCheck, Star, AlertCircle, ArrowLeft, Send} from 'lucide-react';
+import {IndianRupee, Clock, MessageSquare, ShieldCheck, Star, AlertCircle, ArrowLeft, Send, Paperclip} from 'lucide-react';
 import {MapContainer, TileLayer, Marker, Popup} from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
@@ -80,11 +80,12 @@ interface Bid {
 
 interface ChatMessage {
     _id: string;
-    text: string;
+    text?: string;
     sender: {
         _id: string;
         name: string;
     };
+    attachment?: string;
     createdAt: string;
 }
 
@@ -327,6 +328,22 @@ export const TaskDetails: React.FC = () => {
         });
         setNewMessageText('');
     };
+    const handleSendImageMessage = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (!file || !socket || !task || !user) return;
+
+        const reader = new FileReader();
+        reader.readAsDataURL(file);
+        reader.onload = () => {
+            const base64Str = reader.result as string;
+            socket.emit('send_message', {
+                taskId: task._id,
+                senderId: user.id,
+                attachment: base64Str,
+                text: ''
+            });
+        };
+    };
     const handleSubmitReview = async (e: React.FormEvent)=> {
         e.preventDefault();
         if (!task || reviewSubmitting) return;
@@ -564,15 +581,24 @@ export const TaskDetails: React.FC = () => {
                                         <div
                                         key={msg._id}
                                         className={`flex flex-col max-w-[80%] rounded-2xl p-3 ${
-                                            isMe
-                                            ? 'bg-brand-500 text-white ml-auto rounded-tr-none'
-                                            : 'bg-slate-950 text-slate-200 mr-auto rounded-tl-none border border-slate-850'    
+                                            isMe ? 'bg-brand-500 text-white ml-auto rounded-tr-none' :
+                                                'bg-slate-950 text-slate-200 mr-auto rounded-tl-none border border-slate-850'
                                         }`}
                                         >
                                             <span className="text-[10px] text-slate-450 font-bold mb-1 block">
                                                 {isMe ? 'You' : msg.sender.name}
                                             </span>
-                                            <p className="leading-relaxed break-words">{msg.text}</p>
+                                            {msg.attachment && (
+                                                <div className="border border-slate-800 rounded-xl overflow-hidden mb-2 bg-black max-w-xs max-h-48 flex items-center justify-center">
+                                                    <img
+                                                    src={msg.attachment}
+                                                    alt="Sent attachment"
+                                                    className="w-full h-auto max-h-48 object-contain cursor-pointer"
+                                                    onClick={() => window.open(msg.attachment, '_blank')}
+                                                    />
+                                                </div>
+                                            )}
+                                            {msg.text && <p className="leading-relaxed break-words">{msg.text}</p>}
                                         </div>
                                     );
                                 })}
@@ -580,7 +606,17 @@ export const TaskDetails: React.FC = () => {
                             </div>
                             {/* Chat Input Form */}
                             {task.status === 'assigned' && (
-                                <form onSubmit={handleSendMessage} className="flex gap-2 border-t border-slate-800 pt-3">
+                                <form onSubmit={handleSendMessage} className="flex gap-2 border-t border-slate-800 pt-3 items-center">
+                                    <label htmlFor="chat-mdeia-attachment" className="p-2 bg-slate-950 border border-slate-850 hover:bg-slate-900 rounded-xl cursor-pointer transition-colors flex-shrink-0 text-slate-400 hover:text-white">
+                                        <Paperclip className="w-4 h-4"/>
+                                        <input
+                                        type="file"
+                                        accept="image/*"
+                                        id="chat-media-attachment"
+                                        onChange={handleSendImageMessage}
+                                        className="hidden"
+                                        />
+                                    </label>
                                     <input
                                     type="text"
                                     value={newMessageText}
