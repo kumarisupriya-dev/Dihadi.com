@@ -1,7 +1,7 @@
 import React, {useState, useEffect} from 'react';
 import {useAuth} from '../context/Authcontext';
 import {apiFetch} from '../utils/api.ts';
-import {ShieldCheck, Upload, AlertCircle, Sparkles, Check, X, ShieldAlert, Scale, HelpCircle} from 'lucide-react';
+import {ShieldCheck, Upload, AlertCircle, Sparkles, Check, X, ShieldAlert, Scale, HelpCircle, Landmark, TrendingUp} from 'lucide-react';
 
 interface PendingUser {
     _id: string;
@@ -32,6 +32,17 @@ export const Verification: React.FC = () => {
     const [message, setMessage] = useState('');
     const [disputedQueue, setDisputedQueue] = useState<DisputedTask[]>([]);
     const [loadingDisputes, setLoadingDisputes] = useState(false);
+    const [treasuryStats, setTreasuryStats] = useState<{totalFeesCollected: number; activeEscrowAmount: number} | null>(null);
+
+    const fetchTreasuryStats = async () => {
+        if (!user?.isAdmin) return;
+        try {
+            const data = await apiFetch('/tasks/treasury-stats');
+            setTreasuryStats(data);
+        } catch (err: any) {
+            setError(err.message || 'Failed to load platform stats.');
+        }
+    };
 
     const fetchDisputedQueue = async () => {
         if (!user?.isAdmin) return;
@@ -50,6 +61,7 @@ export const Verification: React.FC = () => {
         if (user?.isAdmin) {
             fetchPendingQueue();
             fetchDisputedQueue();
+            fetchTreasuryStats();
         }
     }, [user]);
 
@@ -63,6 +75,7 @@ export const Verification: React.FC = () => {
             });
             setMessage(`Dispute resolved successfully.`);
             await fetchDisputedQueue();
+            await fetchTreasuryStats();
             await refreshUser();
         } catch (err: any) {
             setError(err.message || 'Dispute resolution failed.');
