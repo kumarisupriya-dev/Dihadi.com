@@ -222,6 +222,31 @@ export const Verification: React.FC = () => {
                     </div>
                 )}
             </div>
+            {/* Admin treasury stats dashboard */}
+            {user.isAdmin && treasuryStats && (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+                    <div className="bg-slate-900 border border-slate-800 rounded-3xl p-6 shadow-xl relative overflow-hidden flex items-center justify-between">
+                        <div className="space-y-1">
+                            <span className="text-xs text-slate-455 uppercase font-smeibold block">Total Revenue Collected (5% Fee)</span>
+                            <span className="text-3xl font-black text-white">₹{treasuryStats.totalFeesCollected.toFixed(2)}</span>
+                            <p className="text-[10px] text-slate-500">Platform earnings from completed errands</p>
+                        </div>
+                        <div className="bg-emerald-500/10 p-4 rounded-2xl border border-emerald-500/20 text-emerald-450 flex-shrink-0">
+                            <Landmark className="w-8 h-8"/>
+                        </div>
+                    </div>
+                    <div className="bg-slate-900 border border-slate-800 rounded-3xl p-6 shadow-xl relative overflow-hidden flex items-center justify-between">
+                        <div className="space-y-1">
+                            <span className="text-xs text-slate-455 uppercase font-semibold block">Total Escrow Funds Active</span>
+                            <span className="text-3xl font-black text-white">₹{treasuryStats.activeEscrowAmount.toFixed(2)}</span>
+                            <p className="text-[10px] text-slate-500">Frozen funds for in-progress and disputed errands</p>
+                        </div>
+                        <div className="bg-indigo-500/10 p-4 rounded-2xl border border-indigo-500/20 text-indigo-400 flex-shrink-0">
+                            <Scale className="w-8 h-8"/>
+                        </div>
+                    </div>
+                </div>
+            )}
             {/* Admin verification queue */}
             {user.isAdmin && (
                 <div className="bg-slate-900 border border-slate-800 rounded-3xl p-8 shadow-xl space-y-6">
