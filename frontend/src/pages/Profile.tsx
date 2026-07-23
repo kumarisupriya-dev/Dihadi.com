@@ -22,6 +22,9 @@ interface Review {
     rating: number;
     comment?: string;
     createdAt: string;
+    task?: {
+        category: string;
+    };
 }
 
 export const Profile: React.FC = () => {
@@ -52,6 +55,43 @@ export const Profile: React.FC = () => {
             fetchProfileData();
         }
     }, [userId]);
+
+    const total = reviews.length;
+    const starCounts = {5: 0, 4: 0, 3: 0, 2: 0, 1: 0};
+    reviews.forEach((r) => {
+        const rounded = Math.round(r.rating) as 5 | 4 | 3 | 2 | 1;
+        if (starCounts[rounded] !== undefined) {
+            starCounts[rounded]++;
+        }
+    });
+
+    const categoryStats: {[cat: string]: {sum: number; count: number}} = {};
+    reviews.forEach((r) => {
+        if (r.task?.category) {
+           const cat = r.task.category;
+              if (!categoryStats[cat]) {
+                 categoryStats[cat] = {sum: 0, count: 0};
+        }
+        categoryStats[cat].sum += r.rating;
+        categoryStats[cat].count++;
+    }
+    });
+
+    const earnedBadges: {name: string; icon: string; style: string}[] = [];
+    Object.entries(categoryStats).forEach(([cat, stats]) => {
+        const avg = stats.sum / stats.count;
+        if (stats.count >= 3 && avg >= 4.5) {
+            if (cat === 'Delivery') {
+                earnedBadges.push({name: 'Golden Wheels', icon: '🚲', style: 'bg-amber-500/10 text-amber-400 border-amber-500/20'});
+            } else if (cat === 'Cleaning') {
+                earnedBadges.push({name: 'Sparkle Master', icon: '🧹', style: 'bg-teal-500/10 text-teal-400 border-teal-500/20'});
+            } else if (cat === 'Tech Help') {
+                earnedBadges.push({name: 'Tech Guru', icon: '💻', style: 'bg-blue-500/10 text-blue-400 border-blue-500/20'});
+            } else if (cat === 'Housework') {
+                earnedBadges.push({name: 'Home Expert', icon: '🏡', style: 'bg-indigo-500/10 text-indigo-400 border-indigo-500/20'});
+            }
+        }
+    });
 
     if (loading) {
         return (
@@ -93,7 +133,17 @@ export const Profile: React.FC = () => {
                             {profile.name}
                             {profile.isVerified && <ShieldCheck className="w-7 hg-7 text-emerald-450 fill-emerald-450/10"/>}
                         </h1>
-                        <p className="text-sm text-slate-400">{profile.name}</p>
+                        <p className="text-sm text-slate-400">{profile.email}</p>
+                        {earnedBadges.length > 0 && (
+                            <div className="flex flex-wrap gap-2 mt-2 justify-center md:justify-start">
+                                {earnedBadges.map((badge) => (
+                                    <span key={badge.name} className={`inline-flex items-center gap-1.5 text-[9px] font-extrabold px-2.5 py-0.5 rounded-lg border shadow-sm ${badge.style}`}>
+                                        <span>{badge.icon}</span>
+                                        <span>{badge.name}</span>
+                                    </span>
+                                ))}
+                            </div>
+                        )}
                         <p className="text-xs text-slate-500 flex items-center justify-center md:justify-start gap-1">
                             <Calendar className="w-4 h-4"/>
                             Member since {new Date(profile.createdAt).toLocaleDateString()}
@@ -117,6 +167,41 @@ export const Profile: React.FC = () => {
                     </div>
                 </div>
             </div>
+            {reviews.length > 0 && (
+                <div className="bg-slate-900 border border-slate-800 rounded-3xl p-8 shadow-xl grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
+                    <div>
+                        <h3 className="text-md font-bold text-white mb-4">Rating Breakdown</h3>
+                        <div className="space-y-2">
+                            {([5, 4, 3, 2, 1] as const).map((stars) => {
+                                const count = starCounts[stars];
+                                const percent = total > 0 ? (count / total) * 100 : 0;
+
+                                return (
+                                    <div key={stars} className="flex items-center gap-3 text-xs text-slate-450">
+                                        <span className="w-12 text-right font-semibold">{stars} Star</span>
+                                        <div className="flex-grow bg-slate-950 rounded-full h-2.5 overflow-hidden border border-slate-850">
+                                            <div className="bg-amber-400 h-full rounded-full transition-all duration-500" style={{width: `${percent}%`}}/>
+                                        </div>
+                                        <span className="w-8 text-left font-bold text-white">{count}</span>
+                                    </div>
+                                );
+                            })}
+                        </div>
+                    </div>
+                    <div className="text-center bg-slate-950/20 border border-slate-850 p-6 rounded-2xl flex flex-col justify-center h-full">
+                        <span className="text-5xl font-black text-white">{profile.rating > 0 ? profile.rating.toFixed(1) : '—'}</span>
+                        <div className="flex items-center justify-center gap-0.5 text-amber-400 mt-2">
+                            {Array.from({length: 5}).map((_, index) => (
+                                <Star
+                                key={index}
+                                className={`w-4 h-4 ${index < Math.round(profile.rating) ? 'fill-amber-400' : 'text-slate-700'}`}
+                                />
+                            ))}
+                        </div>
+                        <p className="text-[10px] text-slate-500 mt-2 uppercase font-bold tracking-wider">Overall User Reputation</p>
+                    </div>
+                </div>
+            )}
             {/* Historical reviews feed section */}
             <div className="bg-slate-900 border border-slate-800 rounded-3xl p-8 shadow-xl space-y-6">
                 <h3 className="text-xl font-bold text-white border-b border-slate-800 pb-2 flex items-center gap-2">

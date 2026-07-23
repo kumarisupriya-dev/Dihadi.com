@@ -64,6 +64,7 @@ Promise<void> => {
     try {
         const reviews = await Review.find({reviewee: req.params.userId})
             .populate('reviewer', 'name')
+            .populate('task', 'category')
             .sort({createdAt: -1});
         res.json(reviews);
     } catch (error) {
