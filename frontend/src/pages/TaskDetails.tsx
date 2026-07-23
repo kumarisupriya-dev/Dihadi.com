@@ -3,7 +3,7 @@ import {useParams, useNavigate} from 'react-router-dom';
 import {useAuth} from '../context/Authcontext';
 import {apiFetch} from '../utils/api';
 import {io} from 'socket.io-client';
-import {IndianRupee, Clock, MessageSquare, ShieldCheck, Star, AlertCircle, ArrowLeft, Send, Paperclip} from 'lucide-react';
+import {IndianRupee, Clock, MessageSquare, ShieldCheck, Star, AlertCircle, ArrowLeft, Send, Paperclip, Search} from 'lucide-react';
 import {MapContainer, TileLayer, Marker, Popup} from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
@@ -125,6 +125,26 @@ export const TaskDetails: React.FC = () => {
     const [disputeReasonInput, setDisputeReasonInput] = useState('');
     const [isDisputing, setIsDisputing] = useState(false);
     const [disputeSubmitting, setDisputeSubmitting] = useState(false);
+    const [chatSearchQuery, setChatSearchQuery] = useState('');
+    const [isChatSearchOpen, setIsChatSearchOpen] = useState(false);
+
+    const highlightText = (text: string, highlight: string) => {
+        if (!highlight.trim()) return <span>{text}</span>;
+        const parts = text.split(new RegExp(`(${highlight.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&')})`,'gi'));
+        return (
+            <span>
+                {parts.map((part, i) =>
+                part.toLowerCase() === highlight.toLowerCase() ? (
+                    <mark key={i} className="bg-amber-300 text-slate-950 px-0.5 rounded font-black">
+                        {part}
+                    </mark>
+                ) : (
+                    part
+                )
+                )}
+            </span>
+        );
+    };
 
     const handleProofUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
@@ -569,13 +589,41 @@ export const TaskDetails: React.FC = () => {
                     {/* Chat Interface */}
                     {isParticipant && (task.status === 'assigned' || task.status === 'completed') && (
                         <div className="bg-slate-900 border border-slate-800 rounded-3xl p-6 shadow-xl flex flex-col h-[400px]">
-                            <h3 className="text-lg font-bold text-white mb-4 border-b border-slate-800 pb-2 flex items-center gap-2">
-                                <MessageSquare className="w-5 h-5 text-indigo-400"/>
-                                Live Errand Chat
-                            </h3>
+                            <div className="flex items-center justify-between border-b border-slate-800 pb-2 mb-4">
+                                <h3 className="text-lg font-bold text-white flex items-center gap-2">
+                                    <MessageSquare className="w-5 h-5 text-indigo-400"/>
+                                    Live Errand Chat
+                                </h3>
+                                <button
+                                type="button"
+                                onClick={() => {
+                                    setIsChatSearchOpen(!isChatSearchOpen);
+                                    if (isChatSearchOpen) setChatSearchQuery('');
+                                }}
+                                className="text-slate-450 hover:text-white p-1 hover:bg-slate-800 rounded-lg transition-colors duration-200"
+                                title="Search messages"
+                                >
+                                    <Search className="w-4 h-4"/>
+                                </button>
+                            </div>
+                            {/* Search input field */}
+                            {isChatSearchOpen && (
+                                <input
+                                type="text"
+                                value={chatSearchQuery}
+                                onChange={(e) => setChatSearchQuery(e.target.value)}
+                                placeholder="Search keywords"
+                                className="w-full bg-slate-950 border border-slate-850 focus:border-brand-500 rounded-xl py-2 px-3 text-white text-xs mb-3 focus:outline-none transition-colors duration-200"
+                                />
+                            )}
                             {/* Message Log */}
                             <div className="flex-grow overflow-y-auto mb-4 space-y-3 pr-1 text-xs scrollbar-thin">
-                                {messages.map((msg) => {
+                                {messages
+                                    .filter((msg) => {
+                                        if (!chatSearchQuery.trim()) return true;
+                                        return msg.text?.toLowerCase().includes(chatSearchQuery.toLowerCase()) || false;
+                                    })
+                                    .map((msg) => {
                                     const isMe = msg.sender._id === user.id;
                                     return (
                                         <div
@@ -598,7 +646,11 @@ export const TaskDetails: React.FC = () => {
                                                     />
                                                 </div>
                                             )}
-                                            {msg.text && <p className="leading-relaxed break-words">{msg.text}</p>}
+                                            {msg.text && (
+                                                <p className="leading-relaxed break-words">
+                                                    {highlightText(msg.text, chatSearchQuery)}
+                                                </p>
+                                            )}
                                         </div>
                                     );
                                 })}
