@@ -3,7 +3,7 @@ import {useParams, useNavigate} from 'react-router-dom';
 import {useAuth} from '../context/Authcontext';
 import {apiFetch} from '../utils/api';
 import {io} from 'socket.io-client';
-import {IndianRupee, Clock, MessageSquare, ShieldCheck, Star, AlertCircle, ArrowLeft, Send, Paperclip, Search} from 'lucide-react';
+import {IndianRupee, Clock, MessageSquare, ShieldCheck, Star, AlertCircle, ArrowLeft, Send, Paperclip, Search, Briefcase} from 'lucide-react';
 import {MapContainer, TileLayer, Marker, Popup} from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
@@ -127,6 +127,16 @@ export const TaskDetails: React.FC = () => {
     const [disputeSubmitting, setDisputeSubmitting] = useState(false);
     const [chatSearchQuery, setChatSearchQuery] = useState('');
     const [isChatSearchOpen, setIsChatSearchOpen] = useState(false);
+    const [recommendations, setRecommendations] = useState<Task[]>([]);
+
+    const fetchRecommendations = async () => {
+        try {
+            const data = await apiFetch(`tasks/${id}/recommendations`);
+            setRecommendations(data);
+        } catch (err) {
+            console.error('Failed to load task recommendations:', err);
+        }
+    };
 
     const highlightText = (text: string, highlight: string) => {
         if (!highlight.trim()) return <span>{text}</span>;
@@ -277,6 +287,7 @@ export const TaskDetails: React.FC = () => {
     useEffect(() => {
         if (user && id) {
             fetchTaskDetails();
+            fetchRecommendations();
         }
     }, [id, user]);
     useEffect(() => {
@@ -1077,6 +1088,47 @@ export const TaskDetails: React.FC = () => {
                         </div>
                     )}
                 </div>
+                {/* Errand recommendations carousel */}
+                {recommendations.length > 0 && (
+                    <div className="border-t border-slate-800 pt-8 mt-4 space-y-4">
+                        <h3 className="text-lg font-black text-white flex items-center gap-2">
+                            <Briefcase className="w-5 h-5 text-indigo-400"/>
+                            Similar Errands Nearby
+                        </h3>
+                        <div className="flex gap-4 overflow-x-auto pb-4 scrollbar-thin">
+                            {recommendations.map((rec) => (
+                                <div
+                                key={rec._id}
+                                onClick={() => {
+                                    navigate(`task/${rec._id}`);
+                                    window.scrollTo({top: 0, behavior: 'smooth'});
+                                }}
+                                className="bg-slate-900 hover:bg-slate-850 border border-slate-800 hover:border-slate-750 p-4 rounded-2xl w-64 flex-shrink-0 cursor-pointer transition-all duration-200 shadow-md flex flex-col justify-between gap-3 group"
+                                >
+                                    <div>
+                                        <div className="flex justify-between items-start gap-2 mb-1.5">
+                                            <span className="text-[9px] font-bold text-indigo-400 bg-indigo-500/10 border border-indigo-500/20 px-1.5 py-0.5 rounded uppercase">
+                                                {rec.category}
+                                            </span>
+                                            <span className="text-xs font-black text-emerald-450">
+                                                ₹{rec.budget}
+                                            </span>
+                                        </div>
+                                        <h4 className="font-bold text-sm text-white group-hover:text-brand-400 transition-colors line-clamp-1">
+                                            {rec.title}
+                                        </h4>
+                                        <p className="text-[10px] text-slate-455 line-clamp-2 mt-1 leading-relaxed">
+                                            {rec.description}
+                                        </p>
+                                    </div>
+                                    <span className="text-[9px] text-slate-500 block text-right font-medium">
+                                        Posted: {new Date(rec.createdAt).toLocaleDateString()}
+                                    </span>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                )}
             </div>
         </div>
     );
