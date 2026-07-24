@@ -424,4 +424,33 @@ Promise<void> => {
     }
 });
 
+router.get('/:id/recommendations', async (req: any, res: Response):
+Promise<void> => {
+    try {
+        const task = await Task.findById(req.params.id);
+        if (!task) {
+            res.status(404).json({error: 'Errand not found.'});
+            return;
+        }
+        let recommendations = await Task.find({
+            status: 'open',
+            _id: {$ne: task._id},
+            category: task.category
+        }).limit(5);
+
+        if (recommendations.length < 3) {
+            const fallback = await Task.find({
+                status: 'open',
+                _id: {$ne: task._id},
+                category: {$ne: task.category}
+            }).limit(5 - recommendations.length);
+            recommendations = [...recommendations, ...fallback];
+        }
+        res.json(recommendations);
+    } catch (error) {
+        console.error('Fetch recommendations error:', error);
+        res.status(500).json({error: 'Server error loading errand recommendations.'});
+    }
+});
+
 export default router;
