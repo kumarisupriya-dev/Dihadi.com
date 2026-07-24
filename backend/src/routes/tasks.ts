@@ -61,7 +61,8 @@ router.get('/', authMiddleware, async (req: AuthRequest, res: Response):
                 }
             };
         }
-        const tasks = await Task.find(query).populate('client', 'name rating isVerified');
+       const tasks = await Task.find(query).populate('client', 'name rating isVerified');
+        tasks.sort((a, b) => (b.isFeatured ? 1 : 0) - (a.isFeatured ? 1 : 0));
         res.json(tasks);
     } catch (error) {
         console.error('Fetch tasks error:', error);
@@ -450,6 +451,63 @@ Promise<void> => {
     } catch (error) {
         console.error('Fetch recommendations error:', error);
         res.status(500).json({error: 'Server error loading errand recommendations.'});
+    }
+});
+
+router.post('/:id/promote', authMiddleware, async (req: AuthRequest, res: Response):
+Promise<void> => {
+    try {
+        const task = await Task.findById(req.params.id);
+        if (!task) {
+            res.status(404).json({error: 'Errand not found.'});
+            return;
+        }
+        if (task.client.toString() !== req.userId) {
+            res.status(403).json({error: 'Not authorized to promote this errand.'});
+            return;
+        }
+        if (task.status !== 'open') {
+            res.status(400).json({error: 'Only open errands can be promoted.'});
+            return;
+        }
+        if (task.isFeatured) {
+            res.status(400).json({error: 'This errand is already promoted.'});
+            return;
+        }
+        const client = await User.findById(req.userId);
+        if (!client) {
+            res.status(404).json({error: 'Client account not found.'});
+            return;
+        }
+        const promoFee = 50;
+        if (client.walletBalance < promoFee) {
+            res.status(400).json({error: `Insufficient wallet balance. Promotion costs ₹${promoFee}.`});
+            return;
+        }
+        client.walletBalance -= promoFee;
+        await client.save();
+
+        task.isFeatured = true;
+        await task.save();
+
+        await SystemTreasury.findOneAndUpdate(
+            {},
+            {$inc: {totalFeesCollected: promoFee}, updatedAt: new Date()},
+            {upsert: true, new: true}
+        );
+
+        const clientTx = new Transaction({
+            user: client._id,
+            amount: -promoFee,
+            type: 'withdraw',
+            task: task._id,
+            description: `Paid platform fee to promote errand: "${task.title}" to Featured`
+        });
+        await clientTx.save();
+        res.json({message: 'Errand promoted to Featured successfully!', task});
+    } catch (error) {
+        console.error('Promote task error:', error);
+        res.status(500).json({error: 'Server error promoting task.'});
     }
 });
 

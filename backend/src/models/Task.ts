@@ -4,7 +4,7 @@ export interface ITask extends Document {
     title: string;
     description: string;
     category: string;
-    budget: string;
+    budget: number;
     location: {
         type: 'Point';
         coordinates: [number, number];
@@ -20,6 +20,7 @@ export interface ITask extends Document {
         submittedAt: Date;
     };
     disputeReason?: string;
+    isFeatured?: boolean;
     createdAt: Date;
 }
 
@@ -30,7 +31,7 @@ const TaskSchema: Schema = new Schema({
     budget: {type: Number, required: true, min: 1},
     location: {
         type: {type: String, enum: ['Point'], default: 'Point', required: true},
-        coordinates: {type: [Number], required: true, index: '2dsphere'},
+        coordinates: {types: [Number], required: true, index: '2dsphere'},
     },
     address: {type: String, required: true},
     status: {
@@ -41,12 +42,13 @@ const TaskSchema: Schema = new Schema({
     client: {type: Schema.Types.ObjectId, ref: 'User', required: true},
     assignedTasker: {type: Schema.Types.ObjectId, ref: 'User'},
     escrowAmount: {type: Number, default: 0},
-    completedProof: {
+    completionProof: {
         documentBase64: {type: String},
         comment: {type: String},
         submittedAt: {type: Date}
     },
     disputeReason: {type: String},
+    inFeatured: {type: Boolean, default: false},
     createdAt: {type: Date, default: Date.now}
 });
 
