@@ -60,6 +60,7 @@ interface Task {
         submittedAt: string;
     };
     disputeReason?: string;
+    isFeatured?: boolean;
 }
 
 interface Bid {
@@ -128,6 +129,18 @@ export const TaskDetails: React.FC = () => {
     const [chatSearchQuery, setChatSearchQuery] = useState('');
     const [isChatSearchOpen, setIsChatSearchOpen] = useState(false);
     const [recommendations, setRecommendations] = useState<Task[]>([]);
+
+    const handlePromoteTask = async () => {
+        if (!window.confirm('Would you like to pay ₹50 to promote this errand? Promoted errands are pinned to the top of listings and styled with a highlighted gold border.')) return;
+        setError('');
+        try {
+            await apiFetch(`/tasks/${task?._id}/promote`, {method: 'POST'});
+            await refreshUser();
+            await fetchTaskDetails();
+        } catch (err: any) {
+            setError(err.message || 'Failed to promote errand.');
+        }
+    };
 
     const fetchRecommendations = async () => {
         try {
@@ -231,7 +244,7 @@ export const TaskDetails: React.FC = () => {
             await refreshUser();
             await fetchTaskDetails();
         } catch (err: any) {
-            setError(err.message || 'Failed to accept counteer-offer');
+            setError(err.message || 'Failed to accept counter-offer');
         }
     };
 
@@ -587,15 +600,34 @@ export const TaskDetails: React.FC = () => {
                 {/* Right Column: Actions & Chat */}
                 <div className="lg:col-span-1 space-y-6">
                     {/* Status Badge */}
-                    <div className="bg-slate-900 border border-slate-800 rounded-3xl p-6 shadow-xl text-center">
-                        <span className="text-xs text-slate-450 uppercase font-semibold block mb-2">Errand Status</span>
-                        <span className={`inline-block text-sm font-black px-6 py-2 rounded-full capitalize border ${
-                            task.status === 'open' ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' :
-                                task.status === 'assigned' ? 'bg-amber-500/10 text-amber-400 border-amber-500/20' :
-                                    'bg-blue-500/10 text-blue-400 border-blue-500/20'
-                        }`}>
-                            {task.status}
-                        </span>
+                    <div className="bg-slate-900 border border-slate-800 rounded-3xl p-6 shadow-xl text-center space-y-4">
+                        <div>
+                            <span className="text-xs text-slate-450 uppercase font-semibold block mb-2">Errand Status</span>
+                            <span className={`inline-block text-sm font-black px-6 py-2 rounded-full capitalize border ${
+                                task.status === 'open' ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' :
+                                    task.status === 'assigned' ? 'bg-amber-500/10 text-amber-400 border-amber-500/20' :
+                                        'bg-blue-500/10 text-blue-400 border-blue-500/20'
+                            }`}>
+                                {task.status}
+                            </span>
+                        </div>
+                        {/* Promote errand action for client */}
+                        {isOwner && task.status === 'open' && (
+                            <div className="border-t border-slate-800 pt-4 mt-2">
+                                {task.isFeatured ? (
+                                    <span className="inline-flex items-center gap-1.5 text-xs font-bold text-amber-400 bg-amber-500/10 border border-amber-500/20 px-3 py-2 rounded-xl justify-center w-full">
+                                        ★ Featured & Promoted
+                                    </span>
+                                ) : (
+                                    <button
+                                    onClick={handlePromoteTask}
+                                    className="w-full bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/30 hover:border-amber-500/50 text-amber-400 font-bold py-2.5 rounded-xl text-xs transition-all duration-200 shadow-md flex items-center justify-center gap-1.5"
+                                    >
+                                        🌟 Promote to Featured (₹50)
+                                    </button>
+                                )}
+                            </div>
+                        )}
                     </div>
                     {/* Chat Interface */}
                     {isParticipant && (task.status === 'assigned' || task.status === 'completed') && (

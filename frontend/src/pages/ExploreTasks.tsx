@@ -30,8 +30,8 @@ interface Task {
     _id: string;
     title: string;
     category: string;
-    budget: number;
-    address: string;
+    budget: string;
+    address: number;
     location: {
         coordinates: [number, number];
     };
@@ -41,7 +41,9 @@ interface Task {
         rating: number;
         isVerified: boolean;
     };
+    isFeatured?: boolean;
 }
+
 const ChangeMapView: React.FC<{center: [number, number]}> = ({center}) => {
     const map = useMap();
     useEffect(() => {
@@ -203,15 +205,24 @@ export const ExploreTasks: React.FC = () => {
                                 <div
                                 key={task._id}
                                 onClick={() => navigate(`/tasks/${task._id}`)}
-                                className="bg-slate-900 border border-slate-800 hover:border-brand-500/40 rounded-3xl p-5 shadow-lg flex justify-between items-center cursor-pointer transition-all duration-200 hover:-translate-y-0.5"
+                                className={`bg-slate-900 border ${
+                                    task.isFeatured
+                                    ? 'bg-slate-500/50 shadow-[0_0_15px_rgba(245,158,11,0.12)] hover:border-amber-400' :
+                                    'border-slate-800 hover:border-brand-500/40'
+                                } rounded-3xl p-5 shadow-lg flex justify-between items-center cursor-pointer transition-all duration-200 hover:-translate-y-0.5`}
                                 >
                                     <div className="space-y-3 flex-grow pr-4">
-                                        <div className="flex items-center gap-2">
+                                        <div className="flex flex-wrap items-center gap-2">
+                                            {task.isFeatured && (
+                                                <span className="bg-amber-500/10 text-amber-400 border border-amber-500/20 text-[9px] font-bold px-2 py-0.5 rounded-md flex items-center gap-1 uppercase tracking-wider">
+                                                    ★ Featured
+                                                </span>
+                                            )}
                                             <span className="bg-slate-850 text-slate-350 text-[10px] font-bold px-2 py-1 rounded-md uppercase tracking-wider">
                                                 {task.category}
                                             </span>
                                             <span className="text-[10px] text-brand-400 font-semibold flex items-center gap-1">
-                                                <Navigation className="w-3 h-3"/>
+                                                <Navigation className="w-3c h-3"/>
                                                 {dist} km away
                                             </span>
                                         </div>
