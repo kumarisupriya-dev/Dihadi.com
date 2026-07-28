@@ -20,6 +20,7 @@ Promise<void> => {
         }
         const messages = await Message.find({task: taskId})
             .populate('sender', 'name')
+            .populate('reactions.user', 'name')
             .sort({createdAt: -1});
         res.json(messages);
     } catch (error) {

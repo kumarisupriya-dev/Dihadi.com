@@ -5,6 +5,10 @@ export interface IMessage extends Document {
     sender: mongoose.Types.ObjectId;
     text?: string;
     attachment?: string;
+    reactions?: {
+        user: mongoose.Types.ObjectId;
+        emoji: string;
+    }[];
     createdAt: Date;
 }
 
@@ -13,6 +17,10 @@ const MessageSchema: Schema = new Schema({
     sender: {type: Schema.Types.ObjectId, ref: 'User', required: true},
     text: {type: String},
     attachment: {type: String},
+    reactions: [{
+        user: {type: Schema.Types.ObjectId, ref: 'User', required: true},
+        emoji: {type: String, required: true}
+    }],
     createdAt: {type: Date, default: Date.now}
 });
 

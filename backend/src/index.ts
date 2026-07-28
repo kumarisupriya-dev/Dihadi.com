@@ -74,6 +74,39 @@ io.on('connection', (socket) => {
             console.error('Socket message save error:', err)
         }
     });
+
+    socket.on('add_reaction', async(data: {messageId: string; userId: string; emoji: string}) => {
+        try {
+            const {messageId, userId, emoji} = data;
+            const msg = await Message.findById(messageId);
+            if (!msg) return;
+
+            if (!msg.reactions) {
+                msg.reactions = [];
+            }
+            const existingIdx = msg.reactions.findIndex(r => r.user.toString() === userId);
+
+            if (existingIdx > -1) {
+                if (msg.reactions[existingIdx].emoji === emoji) {
+                    msg.reactions.splice(existingIdx, 1);
+                } else {
+                    msg.reactions[existingIdx].emoji = emoji;
+                }
+            } else {
+                msg.reactions.push({user: new mongoose.Types.ObjectId(userId) as any, emoji});
+            }
+            await msg.save();
+
+            const populatedMsg = await msg.populate([
+                {path: 'sender', select: 'name'},
+                {path: 'reactions.user', select: 'name'}
+            ]);
+            io.to(msg.task.toString()).emit('reaction_updated', populatedMsg);
+        } catch (err) {
+            console.error('Socket reaction error:', err);
+        }
+    });
+
     socket.on('disconnect', () => {
         console.log(`User disconnected: ${socket.id}`);
     });
