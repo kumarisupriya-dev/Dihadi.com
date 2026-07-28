@@ -87,6 +87,13 @@ interface ChatMessage {
         name: string;
     };
     attachment?: string;
+    reactions?: {
+        user: {
+            _id: string;
+            name: string;
+        };
+        emoji: string;
+    }[];
     createdAt: string;
 }
 
@@ -129,6 +136,20 @@ export const TaskDetails: React.FC = () => {
     const [chatSearchQuery, setChatSearchQuery] = useState('');
     const [isChatSearchOpen, setIsChatSearchOpen] = useState(false);
     const [recommendations, setRecommendations] = useState<Task[]>([]);
+    const [hoveredMessageId, setHoveredMessageId] = useState<string | null>(null);
+
+    const getGroupedReactions = (reactionsList?: ChatMessage['reactions']) => {
+        if (!reactionsList) return [];
+        const groups: {[emoji: string]: {count: number; users: string[]}} = {};
+        reactionsList.forEach((r) => {
+            if (!groups[r.emoji]) {
+                groups[r.emoji] = {count: 0, users: []};
+            }
+            groups[r.emoji].count++;
+            groups[r.emoji].users.push(r.user.name);
+        });
+        return Object.entries(groups).map(([emoji, data]) => ({emoji, ...data}));
+    }
 
     const handlePromoteTask = async () => {
         if (!window.confirm('Would you like to pay ₹50 to promote this errand? Promoted errands are pinned to the top of listings and styled with a highlighted gold border.')) return;
@@ -312,6 +333,9 @@ export const TaskDetails: React.FC = () => {
                 socketInstance.emit('join_room', id);
                 socketInstance.on('receive_message', (msg: ChatMessage) => {
                     setMessages((prev) => [...prev, msg]);
+                });
+                socketInstance.on('reaction_updated', (updatedMsg: ChatMessage) => {
+                    setMessages((prev) => prev.map((m) => m._id === updatedMsg._id ? updatedMsg : m));
                 });
                 socketInstance.on('location_update', (coords: [number, number]) => {
                     setTaskerLocation(coords);
@@ -667,36 +691,77 @@ export const TaskDetails: React.FC = () => {
                                         return msg.text?.toLowerCase().includes(chatSearchQuery.toLowerCase()) || false;
                                     })
                                     .map((msg) => {
-                                    const isMe = msg.sender._id === user.id;
-                                    return (
-                                        <div
-                                        key={msg._id}
-                                        className={`flex flex-col max-w-[80%] rounded-2xl p-3 ${
-                                            isMe ? 'bg-brand-500 text-white ml-auto rounded-tr-none' :
-                                                'bg-slate-950 text-slate-200 mr-auto rounded-tl-none border border-slate-850'
-                                        }`}
-                                        >
-                                            <span className="text-[10px] text-slate-450 font-bold mb-1 block">
-                                                {isMe ? 'You' : msg.sender.name}
-                                            </span>
-                                            {msg.attachment && (
-                                                <div className="border border-slate-800 rounded-xl overflow-hidden mb-2 bg-black max-w-xs max-h-48 flex items-center justify-center">
-                                                    <img
-                                                    src={msg.attachment}
-                                                    alt="Sent attachment"
-                                                    className="w-full h-auto max-h-48 object-contain cursor-pointer"
-                                                    onClick={() => window.open(msg.attachment, '_blank')}
-                                                    />
+                                        const isMe = msg.sender._id === user.id;
+                                        return (
+                                            <div
+                                            key={msg._id}
+                                            onMouseEnter={() => setHoveredMessageId(msg._id)}
+                                            onMouseLeave={() => setHoveredMessageId(null)}
+                                            className="relative group max-w-[80%] my-1.5"
+                                            style={{marginLeft: isMe ? 'auto' : '0', marginRight: isMe ? '0' : 'auto'}}
+                                            >
+                                                {/* Floating reaction bar */}
+                                                {hoveredMessageId === msg._id && (
+                                                    <div className={`absolute top-[-26px] ${isMe ? 'right-0' : 'left-0'} bg-slate-900 border border-slate-800 rounded-full px-2 py-0.5 shadow-lg flex gap-1.5 z-20 animate-in fade-in zoom-in-75 duration-100`}>
+                                                        {['👍', '❤️', '😂', '😮', '👏'].map((emoji) => (
+                                                            <button
+                                                            key={emoji}
+                                                            type="button"
+                                                            onClick={() => {
+                                                                socket?.emit('add_reaction', {
+                                                                    messageId: msg._id,
+                                                                    userId: user.id,
+                                                                    emoji
+                                                                });
+                                                            }}
+                                                            className="hover:sclae-125 transition-transform text-xs"
+                                                            >
+                                                                {emoji}
+                                                            </button>
+                                                        ))}
+                                                    </div>
+                                                )}
+                                                {/* Chat bubble body wrapper */}
+                                                <div
+                                                className={`flex flex-col rounded-2xl p-3 ${ isMe ? 'bg-brand-500 text-white rounded-tr-none' : 'bg-slate-950 text-slate-200 rounded-tl-none border border-slate-850'}`}
+                                                >
+                                                    <span className="text-[10px] text-slate-450 font-bold mb-1 block">
+                                                        {isMe ? 'You' : msg.sender.name}
+                                                    </span>
+                                                    {msg.attachment && (
+                                                        <div className="border border-slate-800 rounded-xl overflow-hidden mb-2 bg-black max-w-xs max-h-48 flex items-center justify-center">
+                                                            <img
+                                                            src={msg.attachment}
+                                                            alt="Sent attachment"
+                                                            className="w-full h-auto max-h-48 object-contain cursor-pointer"
+                                                            onClick={() => window.open(msg.attachment || '', '_blank')}
+                                                            />
+                                                        </div>
+                                                    )}
+                                                    {msg.text && (
+                                                        <p className="leading-relaxed break-words">
+                                                            {highlightText(msg.text, chatSearchQuery)}
+                                                        </p>
+                                                    )}
+                                                    {/* Grouped reactions display pill tags */}
+                                                    {msg.reactions && msg.reactions.length > 0 && (
+                                                        <div className="flex flex-wrap gap-1  mt-1.5 justify-end">
+                                                            {getGroupedReactions(msg.reactions).map((group) => (
+                                                                <span
+                                                                key={group.emoji}
+                                                                title={`Reacted by: ${group.users.join(', ')}`}
+                                                                className="inline-flex items-center gap-1 bg-slate-950/80 border border-slate-850 text-[9px] px-1.5 py-0.5 rounded-full text-slate-300 cursor-help font-bold shadow-sm"
+                                                                >
+                                                                    <span>{group.emoji}</span>
+                                                                    <span>{group.count}</span>
+                                                                </span>
+                                                            ))}
+                                                        </div>
+                                                    )}
                                                 </div>
-                                            )}
-                                            {msg.text && (
-                                                <p className="leading-relaxed break-words">
-                                                    {highlightText(msg.text, chatSearchQuery)}
-                                                </p>
-                                            )}
-                                        </div>
-                                    );
-                                })}
+                                            </div>
+                                        );
+                                    })}
                                 <div ref={chatEndRef}/>
                             </div>
                             {/* Chat Input Form */}
