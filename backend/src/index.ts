@@ -97,6 +97,10 @@ io.on('connection', (socket) => {
             }
             await msg.save();
 
+            socket.on('typing_status', (data: {taskId: string; userId: string; name: string; isTyping: boolean}) => {
+                socket.to(data.taskId).emit('typing_update', data);
+            })
+
             const populatedMsg = await msg.populate([
                 {path: 'sender', select: 'name'},
                 {path: 'reactions.user', select: 'name'}

@@ -138,6 +138,8 @@ export const TaskDetails: React.FC = () => {
     const [recommendations, setRecommendations] = useState<Task[]>([]);
     const [hoveredMessageId, setHoveredMessageId] = useState<string | null>(null);
     const [hoverRating, setHoverRating] = useState<number | null>(null);
+    const [typingUser, setTypingUser] = useState<string | null>(null);
+    const typingTimeoutRef = useRef<any>(null);
 
     const getGroupedReactions = (reactionsList?: ChatMessage['reactions']) => {
         if (!reactionsList) return [];
@@ -338,6 +340,13 @@ export const TaskDetails: React.FC = () => {
                 socketInstance.on('reaction_updated', (updatedMsg: ChatMessage) => {
                     setMessages((prev) => prev.map((m) => m._id === updatedMsg._id ? updatedMsg : m));
                 });
+                socketInstance.on('typing_update', (data: {userId: string; name: string; isTyping: boolean}) => {
+                    if (data.isTyping) {
+                        setTypingUser(data.name);
+                    } else {
+                        setTypingUser(null);
+                    }
+                });
                 socketInstance.on('location_update', (coords: [number, number]) => {
                     setTaskerLocation(coords);
                 })
@@ -386,17 +395,47 @@ export const TaskDetails: React.FC = () => {
             setError(err.message || 'Failed to accept bid.');
         }
     };
-    const handleSendMessage = (e: React.FormEvent) => {
-        e.preventDefault();
-        if (!newMessageText.trim() || !socket || !task || !user) return;
+   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+       setNewMessageText(e.target.value);
+       if (!socket || !task || !user) return;
 
-        socket.emit('send_message', {
-            taskId: task._id,
-            senderId: user.id,
-            text: newMessageText,
-        });
-        setNewMessageText('');
-    };
+       socket.emit('typing_status', {
+           taskId: task._id,
+           userId: user.id,
+           name: user.name,
+           isTyping: true
+       });
+       if (typingTimeoutRef.current) {
+           clearTimeout(typingTimeoutRef.current);
+       }
+       typingTimeoutRef.current = setTimeout(() => {
+           socket.emit('typing_status', {
+               taskId: task._id,
+               userId: user.id,
+               name: user.name,
+               isTyping: false
+           });
+       }, 1500);
+   };
+   const handleSendMessage = (e: React.FormEvent) => {
+       e.preventDefault();
+       if (!newMessageText.trim() || !socket || !task || !user) return;
+       if (typingTimeoutRef.current) {
+           clearTimeout(typingTimeoutRef.current);
+       }
+       socket.emit('typing_status', {
+           taskId: task._id,
+           userId: user.id,
+           name: user.name,
+           isTyping: false
+       });
+       socket.emit('send_message', {
+           taskId: task._id,
+           senderId:user.id,
+           text: newMessageText,
+       });
+       setNewMessageText('');
+   };
     const handleSendImageMessage = (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
         if (!file || !socket || !task || !user) return;
@@ -765,10 +804,21 @@ export const TaskDetails: React.FC = () => {
                                     })}
                                 <div ref={chatEndRef}/>
                             </div>
+                            {/* Typing Indicator Bubble */}
+                            {typingUser && (
+                                <div className="flex items-center gap-2 px-3 py-1.5 bg-slate-950/4- border border-slate-850 rounded-xl text-[10px] text-slate-400 w-max animate-pulse mb-3">
+                                    <span className="font-semibold">{typingUser} is typing</span>
+                                    <div className="flex gap-0.5">
+                                        <span className="w-1 h-1 bg-indigo-400 rounded-full animate-bounce" style={{animationDelay: '0ms'}}></span>
+                                        <span className="w-1 h-1 bg-indigo-400 rounded-full animate-bounce" style={{animationDelay: '150ms'}}></span>
+                                        <span className="w-1 h-1 bg-indigo-400 rounded-full animate-bounce" style={{animationDelay: '300ms'}}></span>
+                                    </div>
+                                </div>
+                            )}
                             {/* Chat Input Form */}
                             {task.status === 'assigned' && (
                                 <form onSubmit={handleSendMessage} className="flex gap-2 border-t border-slate-800 pt-3 items-center">
-                                    <label htmlFor="chat-mdeia-attachment" className="p-2 bg-slate-950 border border-slate-850 hover:bg-slate-900 rounded-xl cursor-pointer transition-colors flex-shrink-0 text-slate-400 hover:text-white">
+                                    <label htmlFor="chat-media-attachment" className="p-2 bg-slate-950 border border-slate-850 hover:bg-slate-900 rounded-xl cursor-pointer transition-colors flex-shrink-0 text-slate-400 hover:text-white">
                                         <Paperclip className="w-4 h-4"/>
                                         <input
                                         type="file"
@@ -781,8 +831,8 @@ export const TaskDetails: React.FC = () => {
                                     <input
                                     type="text"
                                     value={newMessageText}
-                                    onChange={(e) => setNewMessageText(e.target.value)}
-                                    placeholder="Type Message"
+                                    onChange={handleInputChange}
+                                    placeholder="Type MEssage"
                                     className="flex-grow bg-slate-950 border border-slate-850 focus:border-brand-500 rounded-xl py-2 px-3 text-white text-xs focus:outline-none transition-colors duration-200"
                                     />
                                     <button
