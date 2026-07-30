@@ -137,6 +137,7 @@ export const TaskDetails: React.FC = () => {
     const [isChatSearchOpen, setIsChatSearchOpen] = useState(false);
     const [recommendations, setRecommendations] = useState<Task[]>([]);
     const [hoveredMessageId, setHoveredMessageId] = useState<string | null>(null);
+    const [hoverRating, setHoverRating] = useState<number | null>(null);
 
     const getGroupedReactions = (reactionsList?: ChatMessage['reactions']) => {
         if (!reactionsList) return [];
@@ -976,19 +977,26 @@ export const TaskDetails: React.FC = () => {
                                         <form onSubmit={handleSubmitReview} className="space-y-4">
                                             <h3 className="text-md font-bold text-white">Rate the Tasker's Work</h3>
                                             {/* Rating Stars */}
-                                            <div className="flex items-center gap-2">
+                                            <div className="flex items-center gap-2.5 py-1">
                                                 {Array.from({length: 5}).map((_, index) => {
-                                                    const starValue = index  + 1;
-                                                return (
-                                                    <button
-                                                    type="button"
-                                                    key={index}
-                                                    onClick={() => setReviewRating(starValue)}
-                                                    className="text-amber-400 hover:scale-110 transition-transform duration-100"
-                                                    >
-                                                        <Star className={`w-7 h-7 ${starValue <= reviewRating ? 'fill-amber-400' : 'text-slate-600'}`}/>
-                                                    </button>
-                                                );
+                                                    const starValue = index + 1;
+                                                    const isHighlighted = starValue <= (hoverRating !== null ? hoverRating : reviewRating);
+                                                    return (
+                                                        <button
+                                                        type="button"
+                                                        key={index}
+                                                        onClick={() => setReviewRating(starValue)}
+                                                        onMouseEnter={() => setHoverRating(starValue)}
+                                                        onMouseLeave={() => setHoverRating(null)}
+                                                        className="transition-all duration-150 transform hover:scale-125 focus:outline-none"
+                                                        >
+                                                            <Star className={`w-8 h-8 transition-colors duration ${
+                                                                isHighlighted ? 
+                                                                    'text-amber-400 fill-amber-400' : 
+                                                                    'text-slate-700 hover:text-amber-300'
+                                                            }`}/>
+                                                        </button>
+                                                    );
                                                 })}
                                             </div>
                                             {/* Comment */}
