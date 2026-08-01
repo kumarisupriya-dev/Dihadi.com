@@ -5,7 +5,8 @@ export interface IMessage extends Document {
     sender: mongoose.Types.ObjectId;
     text?: string;
     attachment?: string;
-    reactions?: {
+    audio?: string;
+    reactions: {
         user: mongoose.Types.ObjectId;
         emoji: string;
     }[];
@@ -17,6 +18,7 @@ const MessageSchema: Schema = new Schema({
     sender: {type: Schema.Types.ObjectId, ref: 'User', required: true},
     text: {type: String},
     attachment: {type: String},
+    audio: {type: String},
     reactions: [{
         user: {type: Schema.Types.ObjectId, ref: 'User', required: true},
         emoji: {type: String, required: true}

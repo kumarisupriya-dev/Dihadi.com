@@ -3,7 +3,7 @@ import {useParams, useNavigate} from 'react-router-dom';
 import {useAuth} from '../context/Authcontext';
 import {apiFetch} from '../utils/api';
 import {io} from 'socket.io-client';
-import {IndianRupee, Clock, MessageSquare, ShieldCheck, Star, AlertCircle, ArrowLeft, Send, Paperclip, Search, Briefcase} from 'lucide-react';
+import {IndianRupee, Clock, MessageSquare, ShieldCheck, Star, AlertCircle, ArrowLeft, Send, Paperclip, Search, Briefcase, Mic} from 'lucide-react';
 import {MapContainer, TileLayer, Marker, Popup} from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
@@ -87,6 +87,7 @@ interface ChatMessage {
         name: string;
     };
     attachment?: string;
+    audio?: string;
     reactions?: {
         user: {
             _id: string;
@@ -140,6 +141,11 @@ export const TaskDetails: React.FC = () => {
     const [hoverRating, setHoverRating] = useState<number | null>(null);
     const [typingUser, setTypingUser] = useState<string | null>(null);
     const typingTimeoutRef = useRef<any>(null);
+    const [isRecording, setIsRecording] = useState(false);
+    const [recordingSeconds, setRecordingSeconds] = useState(0);
+    const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+    const audioChunksRef = useRef<Blob[]>([]);
+    const recordingIntervalRef = useRef<any>(null);
 
     const getGroupedReactions = (reactionsList?: ChatMessage['reactions']) => {
         if (!reactionsList) return [];
@@ -416,6 +422,73 @@ export const TaskDetails: React.FC = () => {
                isTyping: false
            });
        }, 1500);
+   };
+   const startRecording = async () => {
+       try {
+           const stream = await navigator.mediaDevices.getUserMedia({audio: true});
+           const mediaRecorder = new MediaRecorder(stream);
+           mediaRecorderRef.current = mediaRecorder;
+           audioChunksRef.current = [];
+
+           mediaRecorder.ondataavailable = (e) => {
+               if (e.data.size > 0) {
+                   audioChunksRef.current.push(e.data);
+               }
+           };
+           mediaRecorder.onstop = async () => {
+               const audioBlob = new Blob(audioChunksRef.current, {type: 'audio/webm'});
+               const reader = new FileReader();
+               reader.readAsDataURL(audioBlob);
+               reader.onloadend = () => {
+                   const base64Audio = reader.result as string;
+                   if (socket && task && user) {
+                       socket.emit('send_message', {
+                           taskId: task._id,
+                           senderId: user.id,
+                           audio: base64Audio
+                       });
+                   }
+               };
+               stream.getTracks().forEach((track) => track.stop());
+           };
+           mediaRecorder.start();
+           setIsRecording(true);
+           setRecordingSeconds(0);
+           recordingIntervalRef.current = setInterval(() => {
+               setRecordingSeconds((prev) => {
+                   if (prev >= 60) {
+                       stopRecording();
+                       return prev;
+                   }
+                   return prev + 1;
+               });
+           }, 1000);
+       } catch (err) {
+           console.error('Failed to start audio recording:', err);
+           alert('Could not access microphone');
+       }
+   };
+   const stopRecording = () => {
+       if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
+           mediaRecorderRef.current.stop();
+       }
+       setIsRecording(false);
+       if (recordingIntervalRef.current) {
+           clearInterval(recordingIntervalRef.current);
+           recordingIntervalRef.current = null;
+       }
+   };
+   const cancelRecording = () => {
+       if (mediaRecorderRef.current) {
+           mediaRecorderRef.current.onstop = null;
+           mediaRecorderRef.current.stop();
+       }
+       setIsRecording(false);
+       if (recordingIntervalRef.current) {
+           clearInterval(recordingIntervalRef.current);
+           recordingIntervalRef.current = null;
+       }
+       audioChunksRef.current = [];
    };
    const handleSendMessage = (e: React.FormEvent) => {
        e.preventDefault();
@@ -783,6 +856,15 @@ export const TaskDetails: React.FC = () => {
                                                             {highlightText(msg.text, chatSearchQuery)}
                                                         </p>
                                                     )}
+                                                    {msg.audio && (
+                                                        <div className="mt-2 w-64 max-w-full">
+                                                            <audio
+                                                            src={msg.audio}
+                                                            controls
+                                                            className="w-full h-8 bg-slate-900 border border-slate-800 rounded-lg outline-none text-xs"
+                                                            />
+                                                        </div>
+                                                    )}
                                                     {/* Grouped reactions display pill tags */}
                                                     {msg.reactions && msg.reactions.length > 0 && (
                                                         <div className="flex flex-wrap gap-1  mt-1.5 justify-end">
@@ -818,7 +900,7 @@ export const TaskDetails: React.FC = () => {
                             {/* Chat Input Form */}
                             {task.status === 'assigned' && (
                                 <form onSubmit={handleSendMessage} className="flex gap-2 border-t border-slate-800 pt-3 items-center">
-                                    <label htmlFor="chat-media-attachment" className="p-2 bg-slate-950 border border-slate-850 hover:bg-slate-900 rounded-xl cursor-pointer transition-colors flex-shrink-0 text-slate-400 hover:text-white">
+                                    <label htmlFor="chat-media-attachment" className="p-2 bg-slate-950 border border-slate-850 hover:bg-slate-900 rounded-xl cursor-pointer transition-colors flx-shrink-0 text-slate-400 hover:text-white">
                                         <Paperclip className="w-4 h-4"/>
                                         <input
                                         type="file"
@@ -828,16 +910,52 @@ export const TaskDetails: React.FC = () => {
                                         className="hidden"
                                         />
                                     </label>
-                                    <input
-                                    type="text"
-                                    value={newMessageText}
-                                    onChange={handleInputChange}
-                                    placeholder="Type MEssage"
-                                    className="flex-grow bg-slate-950 border border-slate-850 focus:border-brand-500 rounded-xl py-2 px-3 text-white text-xs focus:outline-none transition-colors duration-200"
-                                    />
+                                    {isRecording ? (
+                                        <div className="flex-grow flex items-center justify-between bg-slate-950 border border-slate-850 rounded-xl px-4 py-2 text-xs">
+                                            <div className="flex items-center gap-2">
+                                                <span className="w-2 h-2 bg-rose-600 rounded-full animate-ping"></span>
+                                                <span className="text-rose-450 font-bold uppercase tracking-wider">Recording: {recordingSeconds}s / 60s</span>
+                                            </div>
+                                            <div className="flex gap-2">
+                                                <button
+                                                    type="button"
+                                                    onClick={stopRecording}
+                                                    className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-3 py-1 rounded-lg text-[10px] transition-colors"
+                                                >
+                                                    Send
+                                                </button>
+                                                <button
+                                                type="button"
+                                                onClick={cancelRecording}
+                                                className="bg-slate-850 hover:bg-slate-800 text-slate-400 hover:text-white font-bold px-3 py-1 rounded-lg text-[10px] transition-colors"
+                                                >
+                                                    Cancel
+                                                </button>
+                                            </div>
+                                        </div>
+                                    ) : (
+                                        <input
+                                        type="text"
+                                        value={newMessageText}
+                                        onChange={handleInputChange}
+                                        placeholder="Type Message"
+                                        className="flex-grow bg-slate-950 border border-slate-850 focus:border-brand-500 rounded-xl py-2 px-3 text-white text-xs focus:outline-none transition-colors duration-200"
+                                        />
+                                    )}
+                                    {!isRecording && (
+                                        <button
+                                        type="button"
+                                        onClick={startRecording}
+                                        className="p-2 bg-slate-950 border border-slate-850 hover:bg-slate-900 rounded-xl cursor-pointer transition-colors flex-shrink-0 text-slate-400 hover:text-white"
+                                        title="Record audio"
+                                        >
+                                            <Mic className="w-4 h-4"/>
+                                        </button>
+                                    )}
                                     <button
                                     type="submit"
-                                    className="bg-brand-500 hover:bg-brand-600 text-white p-2 rounded-xl transition-colors duration-200 flex-shrink-0"
+                                    disabled={isRecording}
+                                    className="bg-brand-500 hover:bg-brand-600 text-white p-2 rounded-xl transition-colors duration-200 flex-shrink-0 disabled:opacity-50"
                                     >
                                         <Send className="w-4 h-4"/>
                                     </button>
