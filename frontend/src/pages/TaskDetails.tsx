@@ -146,6 +146,7 @@ export const TaskDetails: React.FC = () => {
     const mediaRecorderRef = useRef<MediaRecorder | null>(null);
     const audioChunksRef = useRef<Blob[]>([]);
     const recordingIntervalRef = useRef<any>(null);
+    const [isCounterpartOnline, setIsCounterpartyOnline] = useState(false);
 
     const getGroupedReactions = (reactionsList?: ChatMessage['reactions']) => {
         if (!reactionsList) return [];
@@ -340,6 +341,22 @@ export const TaskDetails: React.FC = () => {
                 const socketInstance = io('http://localhost:5000');
                 setSocket(socketInstance);
                 socketInstance.emit('join_room', id);
+                socketInstance.emit('register_active_user', {userId: user.id, taskId: id});
+                const counterpartyId = task.client._id === user.id
+                ? task.assignedTasker?._id
+                    : task.client._id;
+
+                if (counterpartyId) {
+                    socketInstance.emit('check_user_online', {targetUserId: counterpartyId}, (isOnline: boolean) => {
+                        setIsCounterpartyOnline(isOnline);
+                    });
+                }
+
+                socketInstance.on('user_status_update', (data: {userId: string; isOnline: boolean}) => {
+                    if (data.userId === counterpartyId) {
+                        setIsCounterpartyOnline(data.isOnline);
+                    }
+                });
                 socketInstance.on('receive_message', (msg: ChatMessage) => {
                     setMessages((prev) => [...prev, msg]);
                 });
@@ -769,23 +786,37 @@ export const TaskDetails: React.FC = () => {
                     {/* Chat Interface */}
                     {isParticipant && (task.status === 'assigned' || task.status === 'completed') && (
                         <div className="bg-slate-900 border border-slate-800 rounded-3xl p-6 shadow-xl flex flex-col h-[400px]">
-                            <div className="flex items-center justify-between border-b border-slate-800 pb-2 mb-4">
-                                <h3 className="text-lg font-bold text-white flex items-center gap-2">
-                                    <MessageSquare className="w-5 h-5 text-indigo-400"/>
-                                    Live Errand Chat
-                                </h3>
-                                <button
-                                type="button"
-                                onClick={() => {
-                                    setIsChatSearchOpen(!isChatSearchOpen);
-                                    if (isChatSearchOpen) setChatSearchQuery('');
-                                }}
-                                className="text-slate-450 hover:text-white p-1 hover:bg-slate-800 rounded-lg transition-colors duration-200"
-                                title="Search messages"
-                                >
-                                    <Search className="w-4 h-4"/>
-                                </button>
-                            </div>
+                          <div className="flex items-center justify-between border-b border-slate-800 pb-2 mb-4">
+                              <div className="flex items-center gap-2">
+                                  <MessageSquare className="w-5 h-5 text-indigo-400"/>
+                                  <h3 className="text-sm font-bold text-white leading-tight font-black">Live Errand Chat</h3>
+                                  {task?.assignedTasker && (
+                                      <div className="flex items-center gap-1 mt-0.5">
+                                          <span className={`w-1.5 h-1.5 rounded-full ${
+                                              isCounterpartOnline 
+                                              ? 'bg-emerald-500 animate-pulse shadow-[0_0_8px_#10b981' : 'bg-slate-600'
+                                          }`}></span>
+                                          <span className="text-[9px] text-slate-400 font-bold uppercase tracking-wider">
+                                              {user.id === task.client._id ? `${task.assignedTasker.name}
+                                              (${isCounterpartOnline ? 'Online' : 'Offline'})`
+                                              : `${task.client.name} (${isCounterpartOnline ? 'Online' : 'Offline'})`
+                                              }
+                                          </span>
+                                      </div>
+                                  )}
+                              </div>
+                          </div>
+                            <button
+                            type="button"
+                            onClick={() => {
+                                setIsChatSearchOpen(!isChatSearchOpen);
+                                if (isChatSearchOpen) setChatSearchQuery('');
+                            }}
+                            className="text-slate-450 hover:text-white p-1 hover:bg-slate-800 rounded-lg transition-colors duration-200"
+                            title="Search messages"
+                            >
+                                <Search className="w-4 h-4"/>
+                            </button>
                             {/* Search input field */}
                             {isChatSearchOpen && (
                                 <input
