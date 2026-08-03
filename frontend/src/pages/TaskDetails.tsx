@@ -338,7 +338,7 @@ export const TaskDetails: React.FC = () => {
         if (user && id && task && (task.status === 'assigned' || task.status === 'completed')) {
             const isPart = task.client._id === user.id || task.assignedTasker?._id === user.id;
             if (isPart) {
-                const socketInstance = io('http://localhost:5000');
+                const socketInstance = io('https://dihadi-backend-mzfu.onrender.com/api');
                 setSocket(socketInstance);
                 socketInstance.emit('join_room', id);
                 socketInstance.emit('register_active_user', {userId: user.id, taskId: id});

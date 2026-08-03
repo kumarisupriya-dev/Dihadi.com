@@ -58,7 +58,7 @@ export const SocketProvider: React.FC<{children: React.ReactNode}> = ({children}
 
     useEffect(() => {
         if (user) {
-            const socketInstance = io('http://localhost:5000');
+            const socketInstance = io('https://dihadi-backend-mzfu.onrender.com/api');
             setSocket(socketInstance);
             socketInstance.emit('join_user_room', user.id);
             fetchNotifications();
