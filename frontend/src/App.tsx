@@ -13,6 +13,7 @@ import {SocketProvider} from './context/SocketContext';
 import {ThemeProvider} from './context/ThemeContext';
 import {Verification} from './pages/Verification';
 import {Profile} from './pages/Profile';
+import {Chatbot} from './component/Chatbot';
 
 function App() {
     return (
@@ -85,6 +86,7 @@ function App() {
                             <Route path="*" element={<Navigate to="/" replace />}/>
                         </Routes>
                     </main>
+                    <Chatbot />
                 </div>
             </Router>
             </SocketProvider>
