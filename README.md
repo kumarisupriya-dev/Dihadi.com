@@ -82,3 +82,5 @@ If microphone access is denied by browser settings, clicking the record trigger 
 * Mobile Port: Port the React frontend into React Native to release native iOS and Android apps.
 
 ## Screenshots of the Project
+![img.png](img.png)
+![img_1.png](img_1.png)

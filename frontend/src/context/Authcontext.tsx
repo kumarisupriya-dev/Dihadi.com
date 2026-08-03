@@ -33,7 +33,7 @@ export const AuthProvider: React.FC<{children: React.ReactNode}> = ({ children }
         const initAuth = async () => {
             if (token) {
                 try {
-                    const API_URL = 'http://localhost:5000/api';
+                    const API_URL = 'https://dihadi-backend-mzfu.onrender.com/api';
                     const res = await fetch(`${API_URL}/auth/me`, {
                         headers: {'Authorization': `Bearer ${token}`}
                     });
@@ -86,7 +86,7 @@ export const AuthProvider: React.FC<{children: React.ReactNode}> = ({ children }
     const refreshUser = async () => {
         if (!token) return;
             try {
-                const API_URL = 'http://localhost:5000/api';
+                const API_URL = 'https://dihadi-backend-mzfu.onrender.com/api';
                 const res = await fetch(`${API_URL}/auth/me`, {
                     headers: {'Authorization': `Bearer ${token}`}
                 });
