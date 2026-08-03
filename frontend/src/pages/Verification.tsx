@@ -1,7 +1,7 @@
 import React, {useState, useEffect} from 'react';
 import {useAuth} from '../context/Authcontext';
 import {apiFetch} from '../utils/api.ts';
-import {ShieldCheck, Upload, AlertCircle, Sparkles, Check, X, ShieldAlert, Scale, HelpCircle, Landmark, TrendingUp} from 'lucide-react';
+import {ShieldCheck, Upload, AlertCircle, Sparkles, Check, X, ShieldAlert, Scale, Landmark} from 'lucide-react';
 
 interface PendingUser {
     _id: string;

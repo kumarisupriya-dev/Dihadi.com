@@ -31,7 +31,7 @@ const TaskSchema: Schema = new Schema({
     budget: {type: Number, required: true, min: 1},
     location: {
         type: {type: String, enum: ['Point'], default: 'Point', required: true},
-        coordinates: {types: [Number], required: true, index: '2dsphere'},
+        coordinates: {type: [Number], required: true, index: '2dsphere'},
     },
     address: {type: String, required: true},
     status: {
@@ -48,7 +48,7 @@ const TaskSchema: Schema = new Schema({
         submittedAt: {type: Date}
     },
     disputeReason: {type: String},
-    inFeatured: {type: Boolean, default: false},
+    isFeatured: {type: Boolean, default: false},
     createdAt: {type: Date, default: Date.now}
 });
 
