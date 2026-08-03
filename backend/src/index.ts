@@ -19,7 +19,7 @@ dotenv.config();
 
 const app = express();
 const PORT = process.env.post || 5000;
-const MONGO_URI = process.env.MONGO_uri || 'mongodb://127.0.0.1:27017/dihadi';
+const MONGO_URI = process.env.MONGO_URI || 'mongodb://127.0.0.1:27017/dihadi';
 
 const server = http.createServer(app);
 
