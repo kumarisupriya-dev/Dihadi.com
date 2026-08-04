@@ -72,7 +72,6 @@ If microphone access is denied by browser settings, clicking the record trigger 
 * Terminal 2 (Frontend): npm run dev
 
 ## AI Usage 
-* Scaffolding: Utilized AI code generators during early setup to initialize Express endpoints and structure mongoose schemas.
 * Filters & Map Synced Logic: Assisted in writing client-side geospatial distance math equations (Haversine formula) to sort tasks relative to live GPS points.
 * Docs & Deployment: Took some help in writing readme and in deployment.
 
