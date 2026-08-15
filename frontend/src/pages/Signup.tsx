@@ -66,7 +66,7 @@ export const Signup: React.FC = () => {
                             required
                             value={name}
                             onChange={(e) => setName(e.target.value)}
-                            placeholder="John Doe"
+                            placeholder="Supriya Kumari"
                             className="w-full bg-slate-950 border border-slate-850 focus:border-brand-500 rounded-xl py-3 pl-12 pr-4 text-white focus:outline-none transition-colors duration-200 shadow-inner"
                             />
                         </div>
@@ -80,7 +80,7 @@ export const Signup: React.FC = () => {
                             required
                             value={email}
                             onChange={(e) => setEmail(e.target.value)}
-                            placeholder="john@example.com"
+                            placeholder="supriya@example.com"
                             className="w-full bg-slate-950 border border-slate-850 focus:border-brand-500 rounded-xl py-3 pl-12 pr-4 text-white focus:outline-none transition-colors duration-200 shadow-inner"
                             />
                         </div>
