@@ -58,8 +58,8 @@ export const ExploreTasks: React.FC = () => {
     const navigate = useNavigate();
     const [tasks, setTasks] = useState<Task[]>([]);
     const [loading, setLoading] = useState(true);
-    const [error, setError] = useState(' ');
-    const [category, setCategory] = useState(' ');
+    const [error, setError] = useState('');
+    const [category, setCategory] = useState('');
     const [radius, setRadius] = useState('10');
     const [coordinates, setCoordinates] = useState<[number, number] | null>(null);
     const [locationName, setLocationName] = useState('Fetching location...');
@@ -70,7 +70,7 @@ export const ExploreTasks: React.FC = () => {
 
     const getBrowserLocation = () => {
         setLoading(true);
-        setError(' ');
+        setError('');
         if (!navigator.geolocation) {
             setError('Geolocation is not supported by your browser.');
             setCoordinates([28.6139, 77.2090]);
