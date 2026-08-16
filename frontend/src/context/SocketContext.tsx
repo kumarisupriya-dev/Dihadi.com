@@ -103,7 +103,7 @@ export const SocketProvider: React.FC<{children: React.ReactNode}> = ({children}
                             {toast.type === 'chat_message' && <MessageSquare className="w-5 h-5 text-blue-400"/>}
                         </div>
                         <div className="flex-grow">
-                            <h4 className="text-sm font-bold txt-white leading-none mb-1">{toast.title}</h4>
+                            <h4 className="text-sm font-bold text-slate-100 leading-none mb-1">{toast.title}</h4>
                             <p className="text-xs text-slate-350 leading-normal">{toast.body}</p>
                         </div>
                         <button

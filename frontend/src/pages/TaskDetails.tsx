@@ -658,7 +658,7 @@ export const TaskDetails: React.FC = () => {
                                 ₹{task.budget}
                             </span>
                         </div>
-                        <h1 className="text-3xl font-black text-white mb-6 leading-tight">{task.title}</h1>
+                        <h1 className="text-3xl font-black text-slate-100 mb-6 leading-tight">{task.title}</h1>
                         <h3 className="text-md font-bold text-slate-300 mb-2">Description</h3>
                         <p className="text-slate-355 leading-relaxed bg-slate-955/30 p-5 rounded-2xl border border-slate-850 mb-6 whitespace-pre-wrap">
                             {task.description}
@@ -703,7 +703,7 @@ export const TaskDetails: React.FC = () => {
                                       <Star className="w-7 h-7 text-indigo-400 fill-indigo-400/20"/>
                                   </div>
                                   <div>
-                                      <h4 className="font-bold text-white text-lg flex items-center gap-1.5">
+                                      <h4 className="font-bold text-slate-100 text-lg flex items-center gap-1.5">
                                           <button
                                           onClick={() => navigate(`/profile/${task.assignedTasker?._id}`)}
                                           className="hover:text-brand-400 hover:underline transition-colors text-left"
@@ -729,7 +729,7 @@ export const TaskDetails: React.FC = () => {
                                         <Star className="w-7 h-7 text-amber-400 fill-amber-400"/>
                                     </div>
                                     <div>
-                                        <h4 className="font-bold text-white text-lg flex items-center gap-1.5">
+                                        <h4 className="font-bold text-slate-100 text-lg flex items-center gap-1.5">
                                             <button
                                             onClick={() => navigate(`/profile/${task.client._id}`)}
                                             className="hover:text-brand-400 hover:underline transition-colors text-lfet"

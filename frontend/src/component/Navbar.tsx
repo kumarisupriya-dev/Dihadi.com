@@ -34,7 +34,7 @@ if (!user) return null;
                 {/* LOGO */}
                 <div className="flex items-center gap-2 cursor-pointer" onClick={() => navigate('/')}>
                     <Briefcase className="w-8 h-8 text-brand-500"/>
-                    <span className="text-2xl font-black tracking-tight text-white">Dihadi<span className="text-brand-500">.com</span></span>
+                    <span className="text-2xl font-black tracking-tight text-slate-100">Dihadi<span className="text-brand-500">.com</span></span>
                 </div>
                 {/* Middle Switch and Wallet */}
                 <div className="flex items-center gap-6">
@@ -76,7 +76,7 @@ if (!user) return null;
                         {showNotifications && (
                             <div className="absolute right-0 mt-3 w-80 bg-slate-900 border border-slate-800 rounded-2xl shadow-2xl p-4 z-[999] space-y-4 backdrop-blur-md bg-opacity-95">
                                 <div className="flex justify-between items-center border-b border-slate-800 pb-2">
-                                    <h3 className="font-bold text-sm text-white">Alerts Center</h3>
+                                    <h3 className="font-bold text-sm text-slate-100">Alerts Center</h3>
                                     {unreadCount > 0 && (
                                         <button onClick={markAllAsRead} className="text-[10px] text-brand-500 hover:underline">
                                             Mark all read
@@ -91,7 +91,7 @@ if (!user) return null;
                                             <div key={n._id} className={`p-2.5 rounded-xl border transition-colors ${
                                                 n.isRead ? 'bg-slate-950/20 border-slate-850' : 'bg-brand-500/5 border-brand-500/25'
                                             }`}>
-                                                <h4 className="text-[11px] font-bold text-white mb-0.5">{n.title}</h4>
+                                                <h4 className="text-[11px] font-bold text-slate-100 mb-0.5">{n.title}</h4>
                                                 <p className="text-[10px] text-slate-350 leading-normal">{n.body}</p>
                                                 <span className="text-[8px] text-slate-500 block mt-1">
                                                     {new Date(n.createdAt).toLocaleTimeString([], {hour: '2-digit', minute: '2-digit'})}
@@ -135,7 +135,7 @@ if (!user) return null;
                 {/* User Info and Logout */}
                 <div className="flex items-center gap-4">
                     <div className="flex flex-col text-right">
-                        <span className="text-sm font-semibold text-white flex items-center gap-1">
+                        <span className="text-sm font-semibold text-slate-100 flex items-center gap-1">
                             {user.name}{user.isVerified && <ShieldCheck className="w-4 h-4 text-emerald-400"/>}
                         </span>
                         <span className="text-xs text-slate-400 capitalize">{currentRole}</span>

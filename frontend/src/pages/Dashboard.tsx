@@ -60,7 +60,7 @@ export const Dashboard: React.FC = () => {
                     {/* Profile Card & Action */}
                     <div className="md:col-span-1 space-y-6">
                         <div className="bg-slate-900 border border-slate-800 rounded-3xl p-6 shadow-xl">
-                            <h2 className="text-xl font-bold text-white mb-1">Hello, {user.name}</h2>
+                            <h2 className="text-xl font-bold text-slate-100 mb-1">Hello, {user.name}</h2>
                             <p className="text-xs text-slate-400 mb-6">{user.email}</p>
                             {currentRole === 'client' ? (
                                 <button
@@ -85,7 +85,7 @@ export const Dashboard: React.FC = () => {
                     <div className="md:col-span-2">
                         <div
                             className="bg-slate-900 border border-slate-800 rounded-3xl p-6 shadow-xl h-full flex flex-col">
-                            <h2 className="text-2xl font-bold text-white mb-6">
+                            <h2 className="text-2xl font-bold text-slate-100 mb-6">
                                 {currentRole === 'client' ? 'My Posted Errands' : 'My Active Jobs'}
                             </h2>
                             {error && (
@@ -133,7 +133,7 @@ export const Dashboard: React.FC = () => {
                                             className="flex items-center justify-between bg-slate-950/40 hover:bg-slate-950/80 border border-slate-850 hover:border-slate-700/50 rounded-2xl p-5 cursor-pointer transition-all duration-200"
                                         >
                                             <div className="flex flex-col gap-1">
-                                                <span className="text-lg font-bold text-white leading-tight">
+                                                <span className="text-lg font-bold text-slate-100 leading-tight">
                                                     {task.title}
                                                 </span>
                                                 <div className="flex items-center gap-4 text-xs text-slate-400">
@@ -150,7 +150,7 @@ export const Dashboard: React.FC = () => {
                                             <div className="flex items-center gap-4">
                                                 <div className="flex flex-col text-right">
                                                     <span
-                                                        className="text-lg font-black text-white">₹{task.budget}</span>
+                                                        className="text-lg font-black text-slate-100">₹{task.budget}</span>
                                                     <span
                                                         className={`text-[10px] px-2 py-0.5 rounded-full capitalize ${getStatusStyle(task.status)}`}>
                                                         {task.status}

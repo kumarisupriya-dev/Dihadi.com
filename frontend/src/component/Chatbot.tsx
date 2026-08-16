@@ -87,7 +87,7 @@ export const Chatbot: React.FC = () => {
                                 <Sparkles className="w-4.5 h-4.5 animate-pulse"/>
                             </div>
                             <div>
-                                <h3 className="text-xs font-bold text-white leading-tight">Dihadi Assistant</h3>
+                                <h3 className="text-xs font-bold text-slate-100 leading-tight">Dihadi Assistant</h3>
                                 <span className="text-[9px] text-emerald-450 font-semibold flex items-center gap-1">
                                     <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-ping"></span>
                                     AI Support Active
@@ -146,7 +146,7 @@ export const Chatbot: React.FC = () => {
                         value={inputText}
                         onChange={(e) => setInputText(e.target.value)}
                         placeholder="Type FAQ keyword e.g. escrow..."
-                        className="flex-grow bg-slate-950 border border-slate-850 focus:border-brand-500 rounded-xl py-2 px-3 text-white text-xs focus:outline-none transition-colors duration-200"
+                        className="flex-grow bg-slate-950 border border-slate-850 focus:border-brand-500 rounded-xl py-2 px-3 text-slate-100 text-xs focus:outline-none transition-colors duration-200"
                         />
                         <button
                         type="submit"
