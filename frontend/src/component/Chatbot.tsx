@@ -62,7 +62,7 @@ export const Chatbot: React.FC = () => {
     ];
 
     return (
-        <div className="feixed bottom-6 right-6 z-50">
+        <div className="fixed bottom-4 right-4 sm:bottom-6 sm:right-6 z-50">
             {/* Floating action buttons */}
             {!isOpen && (
                 <button
@@ -79,7 +79,7 @@ export const Chatbot: React.FC = () => {
             )}
             {/* Chatbot expanded panel */}
             {isOpen && (
-                <div className="bg-slate-900/95 backdrop-blur-md border border-slate-800 rounded-3xl w-80 sm:w-96 h-[500px] shadow-2xl flex flex-col overflow-hidden animate-in slide-in-from-bottom duration-250">
+                <div className="bg-slate-900/95 backdrop-blur-md border border-slate-800 rounded-3xl w-[calc(100vw-2rem)] sm:w-96 h-[500px] shadow-2xl flex flex-col overflow-hidden animate-hidden animate-in slide-in-from-bottom duration-250">
                     {/* Header */}
                     <div className="bg-slate-950/80 border-b border-slate-850 p-4 flex items-center justify-between">
                         <div className="flex items-center gap-2">

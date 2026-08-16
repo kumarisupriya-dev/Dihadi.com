@@ -1,4 +1,4 @@
-import React, {useState} from 'react';
+import React, {useState, useEffect, useRef} from 'react';
 import {useAuth} from '../context/Authcontext';
 import {useSocket} from '../context/SocketContext';
 import {Briefcase, LogOut, ShieldCheck, Wallet, Bell, Sun, Moon} from 'lucide-react';
@@ -10,9 +10,24 @@ export const Navbar: React.FC = () => {
     const {notifications, unreadCount, markAllAsRead} = useSocket();
     const {theme, toggleTheme} = useTheme();
     const [showNotifications, setShowNotifications] = useState(false);
+    const dropdownRef = useRef<HTMLDivElement>(null);
     const navigate = useNavigate();
 
-    if (!user) return null;
+    useEffect(() => {
+        const handleClickOutside = (event: MouseEvent) => {
+            if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+                setShowNotifications(false);
+            }
+        };
+        if (showNotifications) {
+            document.addEventListener('mousedown', handleClickOutside);
+        }
+        return () => {
+            document.addEventListener('mousedown', handleClickOutside);
+        };
+    }, [showNotifications]);
+
+if (!user) return null;
     return (
         <nav className="border-b border-slate-800 bg-slate-900/80 backdrop-blur-md sticky top-0 z-50 px-6 py-4">
             <div className="max-w-7xl mx-auto flex items-center justify-between">
@@ -40,6 +55,8 @@ export const Navbar: React.FC = () => {
                     >
                         {theme === 'dark' ? <Sun className="w-5 h-5"/> : <Moon className="w-5 h-5 text-indigo-400"/>}
                     </button>
+                    {/* Notifications dropdown bell */}
+                    <div className="relative" ref={dropdownRef}>
                         <button
                         onClick={() => {
                             setShowNotifications(!showNotifications);
@@ -49,7 +66,7 @@ export const Navbar: React.FC = () => {
                         }}
                         className="relative p-2 bg-slate-800/60 hover:bg-slate-800 border border-slate-700/50 hover:border-indigo-500/30 rounded-xl transition-all duration-200"
                         >
-                           <Bell className="w-5 h-5 text-indigo-400"/>
+                            <Bell className="w-5 h-5 text-indigo-400"/>
                             {unreadCount > 0 && (
                                 <span className="absolute -top-1 -right-1 bg-rose-500 text-white text-[9px] font-black w-4.5 h-4.5 rounded-full flex items-center justify-center animate-bounce">
                                     {unreadCount}
@@ -58,7 +75,7 @@ export const Navbar: React.FC = () => {
                         </button>
                         {showNotifications && (
                             <div className="absolute right-0 mt-3 w-80 bg-slate-900 border border-slate-800 rounded-2xl shadow-2xl p-4 z-[999] space-y-4 backdrop-blur-md bg-opacity-95">
-                                <div className="flex justify-between items-center border-b border-slate-900 pb-2">
+                                <div className="flex justify-between items-center border-b border-slate-800 pb-2">
                                     <h3 className="font-bold text-sm text-white">Alerts Center</h3>
                                     {unreadCount > 0 && (
                                         <button onClick={markAllAsRead} className="text-[10px] text-brand-500 hover:underline">
@@ -68,7 +85,7 @@ export const Navbar: React.FC = () => {
                                 </div>
                                 <div className="max-h-60 overflow-y-auto space-y-2.5 pr-1">
                                     {notifications.length === 0 ? (
-                                        <p className="text-xs text-slate-500 text-center py-6">No recent alerts.</p>
+                                        <p className="text-xs text-slate-500 text-center py-6">No recent alerts</p>
                                     ) : (
                                         notifications.map(n => (
                                             <div key={n._id} className={`p-2.5 rounded-xl border transition-colors ${
@@ -85,6 +102,7 @@ export const Navbar: React.FC = () => {
                                 </div>
                             </div>
                         )}
+                    </div>
                     <button
                     onClick={() => navigate('/verification')}
                     className={`text-[10px] font-bold px-3 py-1.5 rounded-xl border transition-all duration-200 ${
