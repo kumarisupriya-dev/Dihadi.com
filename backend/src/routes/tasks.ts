@@ -92,6 +92,50 @@ Promise<void> => {
     }
 });
 
+router.get('/disputed-errands', authMiddleware, async (req: AuthRequest, res: Response):
+Promise<void> => {
+    try {
+        const adminUser = await User.findById(req.userId);
+        if (!adminUser || !adminUser.isAdmin) {
+            res.status(403).json({error: 'Admin access denied.'});
+            return;
+        }
+        const disputedTasks = await Task.find({status: 'disputed'})
+            .populate('client', 'name email rating')
+            .populate('assignedTasker', 'name email rating');
+        res.json(disputedTasks);
+    } catch (error) {
+        console.error('Fetch disputed tasks error:', error);
+        res.status(500).json({error: 'Server error loading disputed tasks.'});
+    }
+});
+
+router.get('/treasury-stats', authMiddleware, async (req: AuthRequest, res: Response):
+Promise<void> => {
+    try {
+        const adminUser = await User.findById(req.userId);
+        if (!adminUser || !adminUser.isAdmin) {
+            res.status(403).json({error: 'Admin access denied.'});
+            return;
+        }
+        const treasury = await SystemTreasury.findOne({});
+
+        const lockedEscrow = await Task.aggregate([
+            {$match: {status: {$in: ['assigned', 'disputed']}}},
+            {$group: {_id: null, total: {$sum: '$escrowAmount'}}}
+        ]);
+        const activeEscrowAmount = lockedEscrow[0]?.total || 0;
+
+        res.json({
+            totalFeesCollected: treasury?.totalFeesCollected || 0,
+            activeEscrowAmount
+        });
+    } catch (error) {
+        console.error('Fetch treasury stats error:', error);
+        res.status(500).json({error: 'Server error retrieving system treasury statistics.'});
+    }
+});
+
 router.get('/:id', authMiddleware, async (req: AuthRequest, res: Response):
 Promise<void> => {
     try {
@@ -263,24 +307,6 @@ Promise<void> => {
     }
 });
 
-router.get('/disputed-errands', authMiddleware, async (req: AuthRequest, res: Response):
-Promise<void> => {
-    try {
-        const adminUser = await User.findById(req.userId);
-        if (!adminUser || !adminUser.isAdmin) {
-            res.status(403).json({error: 'Admin access denied.'});
-            return;
-        }
-        const disputedTasks = await Task.find({status: 'disputed'})
-            .populate('client', 'name email rating')
-            .populate('assignedTasker', 'name email rating');
-        res.json(disputedTasks);
-    } catch (error) {
-        console.error('Fetch disputed tasks error:', error);
-        res.status(500).json({error: 'Server error loading disputed tasks.'});
-    }
-});
-
 router.post('/:id/resolve-dispute', authMiddleware, async (req: AuthRequest, res: Response):
 Promise<void> => {
     try {
@@ -396,32 +422,6 @@ Promise<void> => {
     } catch (error) {
         console.error('Resolve dispute error:, error');
         res.status(500).json({error: 'Server error resolving dispute.'});
-    }
-});
-
-router.get('/treasury-stats', authMiddleware, async (req: AuthRequest, res: Response):
-Promise<void> => {
-    try {
-        const adminUser = await User.findById(req.userId);
-        if (!adminUser || !adminUser.isAdmin) {
-            res.status(403).json({error: 'Admin access denied.'});
-            return;
-        }
-        const treasury = await SystemTreasury.findOne({});
-
-        const lockedEscrow = await Task.aggregate([
-            {$match: {status: {$in: ['assigned', 'disputed']}}},
-            {$group: {_id: null, total: {$sum: '$escrowAmount'}}}
-        ]);
-        const activeEscrowAmount = lockedEscrow[0]?.total || 0;
-
-        res.json({
-            totalFeesCollected: treasury?.totalFeesCollected || 0,
-            activeEscrowAmount
-        });
-    } catch (error) {
-        console.error('Fetch treasury stats error:', error);
-        res.status(500).json({error: 'Server error retrieving system treasury statistics.'});
     }
 });
 

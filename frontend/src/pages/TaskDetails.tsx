@@ -175,7 +175,7 @@ export const TaskDetails: React.FC = () => {
 
     const fetchRecommendations = async () => {
         try {
-            const data = await apiFetch(`tasks/${id}/recommendations`);
+            const data = await apiFetch(`/tasks/${id}/recommendations`);
             setRecommendations(data);
         } catch (err) {
             console.error('Failed to load task recommendations:', err);
