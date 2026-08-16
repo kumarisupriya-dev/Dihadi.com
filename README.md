@@ -19,7 +19,7 @@ Leaflet maps display task locations dynamically. Hired taskers can activate "Liv
 A sliding glassmorphic sidebar console lets users search for errands. It includes an HTML5 GPS radius slider (1km to 100km), budget sliders, and options to sort listings instantly by newest, highest budget, or nearest distance. Promoted errands (clients pay ₹50 to promote) are pinned to the top of list feeds with glowing neon borders.
 
 **Live Chat with Media, Reactions & Indicators:**
-Connected chat feeds support real-time communication. Taskers and clients can send text messages, upload image attachments, record/send voice audio clips (using browser MediaRecorder), search message history keywords, see live typing status indicators, and react to individual messages with emojis that display aggregated count tags.
+Connected chat feeds support real-time communication. Taskers and clients can send text messages, upload image attachments, record/send voice audio clips (using browser MediaRecorder), send message history keywords, see live typing status indicators, react to individual messages with emojis, and view real-time Whatsapp-style read receipt checkmarks (single gray check for sent, double blue check for read).
 
 **Dihadi AI Assistant Chatbot:**
 A floating conversational drawer widget sits globally in the bottom-right corner of the layout. Users can type questions or click quick-help chips to get answers from the AI Chatbot about payment escrows, system fees, verification, and errand promotions.
