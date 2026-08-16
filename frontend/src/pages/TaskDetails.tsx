@@ -95,6 +95,7 @@ interface ChatMessage {
         };
         emoji: string;
     }[];
+    read?: boolean;
     createdAt: string;
 }
 
@@ -361,6 +362,13 @@ export const TaskDetails: React.FC = () => {
                 });
                 socketInstance.on('receive_message', (msg: ChatMessage) => {
                     setMessages((prev) => [...prev, msg]);
+                    if
+                    (msg.sender._id !== user.id) {
+                        socketInstance.emit('join_room', id);
+                    }
+                });
+                socketInstance.on('messages_read', () => {
+                  setMessages((prev) => prev.map((m) => ({...m, read: true})));
                 });
                 socketInstance.on('reaction_updated', (updatedMsg: ChatMessage) => {
                     setMessages((prev) => prev.map((m) => m._id === updatedMsg._id ? updatedMsg : m));
@@ -868,52 +876,65 @@ export const TaskDetails: React.FC = () => {
                                                     </div>
                                                 )}
                                                 {/* Chat bubble body wrapper */}
-                                                <div
-                                                className={`flex flex-col rounded-2xl p-3 ${ isMe ? 'bg-brand-500 text-white rounded-tr-none' : 'bg-slate-950 text-slate-200 rounded-tl-none border border-slate-850'}`}
-                                                >
-                                                    <span className="text-[10px] text-slate-450 font-bold mb-1 block">
-                                                        {isMe ? 'You' : msg.sender.name}
-                                                    </span>
-                                                    {msg.attachment && (
-                                                        <div className="border border-slate-800 rounded-xl overflow-hidden mb-2 bg-black max-w-xs max-h-48 flex items-center justify-center">
-                                                            <img
-                                                            src={msg.attachment}
-                                                            alt="Sent attachment"
-                                                            className="w-full h-auto max-h-48 object-contain cursor-pointer"
-                                                            onClick={() => window.open(msg.attachment || '', '_blank')}
-                                                            />
-                                                        </div>
-                                                    )}
-                                                    {msg.text && (
-                                                        <p className="leading-relaxed break-words">
-                                                            {highlightText(msg.text, chatSearchQuery)}
-                                                        </p>
-                                                    )}
-                                                    {msg.audio && (
-                                                        <div className="mt-2 w-64 max-w-full">
-                                                            <audio
-                                                            src={msg.audio}
-                                                            controls
-                                                            className="w-full h-8 bg-slate-900 border border-slate-800 rounded-lg outline-none text-xs"
-                                                            />
-                                                        </div>
-                                                    )}
-                                                    {/* Grouped reactions display pill tags */}
-                                                    {msg.reactions && msg.reactions.length > 0 && (
-                                                        <div className="flex flex-wrap gap-1  mt-1.5 justify-end">
-                                                            {getGroupedReactions(msg.reactions).map((group) => (
-                                                                <span
-                                                                key={group.emoji}
-                                                                title={`Reacted by: ${group.users.join(', ')}`}
-                                                                className="inline-flex items-center gap-1 bg-slate-950/80 border border-slate-850 text-[9px] px-1.5 py-0.5 rounded-full text-slate-300 cursor-help font-bold shadow-sm"
-                                                                >
-                                                                    <span>{group.emoji}</span>
-                                                                    <span>{group.count}</span>
-                                                                </span>
-                                                            ))}
-                                                        </div>
-                                                    )}
-                                                </div>
+                                               <div
+                                               className={`flex flex-col rounded-2xl p-3 ${ isMe ? 'bg-brand-500 text-white rounded-tr-none' : 'bg-slate-950 text-slate-200 rounded-tl-none border border-slate-850'}`}
+                                               >
+                                                   <span className="text-[10px] text-slate-455 font-bold mb-1 block">
+                                                       {isMe ? 'You' : msg.sender.name}
+                                                   </span>
+                                                   {msg.attachment && (
+                                                       <div className="border border-slate-800 rounded-xl overflow-hidden mb-2 bg-black max-w-xs max-h-48 items-center justify-center">
+                                                           <img
+                                                           src={msg.attachment}
+                                                           alt="Sent attachment"
+                                                           className="w-full h-auto max-h-48 object-contain cursor-pointer"
+                                                           onClick={() => window.open(msg.attachment || '', '_blank')}
+                                                           />
+                                                       </div>
+                                                   )}
+                                                   {msg.text && (
+                                                       <p className="leading-relaxed break-words">
+                                                           {highlightText(msg.text, chatSearchQuery)}
+                                                       </p>
+                                                   )}
+                                                   {msg.audio && (
+                                                       <div className="mt-2 w-64 max-w-full">
+                                                           <audio
+                                                           src={msg.audio}
+                                                           controls
+                                                           className="w-full h-8 bg-slate-900 border border-slate-800 rounded-lg outline-none text-xs"
+                                                           />
+                                                       </div>
+                                                   )}
+                                                   {msg.reactions && msg.reactions.length > 0 && (
+                                                       <div className="flex flex-wrap gap-1 mt-1.5 justify-end">
+                                                           {getGroupedReactions(msg.reactions).map((group) => (
+                                                               <span
+                                                               key={group.emoji}
+                                                               title={`Reacted by: ${group.users.join(', ')}`}
+                                                               className="inline-flex items-center gap-1 bg-slate-950/80 border border-slate-850 text-[9px] px-1.5 py-0.5 rounded-full text-slate-300 cursor-help font-bold shadow-sm"
+                                                               >
+                                                                   <span>{group.emoji}</span>
+                                                                   <span>{group.count}</span>
+                                                               </span>
+                                                           ))}
+                                                       </div>
+                                                   )}
+                                                   <div className="flex items-center justify-end gap-1 mt-1 text-[9px] text-slate-400 select-none">
+                                                       <span>
+                                                           {new Date(msg.createdAt).toLocaleTimeString([], {hour: '2-digit', minute: '2-digit'})}
+                                                       </span>
+                                                       {isMe && (
+                                                           <span className="ml-1">
+                                                               {msg.read ? (
+                                                                   <span className="text-sky-400 font-extrabold text-[10px] tracking-tighter" title="Read">✓✓</span>
+                                                               ) : (
+                                                                   <span className="text-slate-500 font-bold text-[10px]" title="Sent">✓</span>
+                                                               )}
+                                                           </span>
+                                                       )}
+                                                   </div>
+                                               </div>
                                             </div>
                                         );
                                     })}

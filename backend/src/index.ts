@@ -57,6 +57,7 @@ app.get('/api/health', (req: Request, res: Response) => {
 });
 const onlineUsers = new Map<string, string>();
 const userSockets = new Map<string, string>();
+const activeRoomUsers = new Map<string, Set<string>>();
 
 io.on('connection', (socket) => {
     console.log(`User connected to socket: ${socket.id}`);
@@ -70,24 +71,52 @@ io.on('connection', (socket) => {
         const isOnline = onlineUsers.has(data.targetUserId);
         callback(isOnline);
     });
-    socket.on('join_room', (taskId: string) => {
+
+    socket.on('join_room', async (taskId: string) => {
         socket.join(taskId);
         console.log(`Socket ${socket.id} joined chat room: ${taskId}`);
+
+        const userId = userSockets.get(socket.id);
+        if (userId) {
+            if (!activeRoomUsers.has(taskId)) {
+                activeRoomUsers.set(taskId, new Set());
+            }
+            activeRoomUsers.get(taskId)!.add(userId);
+
+            await Message.updateMany(
+                {task: taskId, sender: {$ne: userId}, read: false},
+                {$set: {read: true}}
+            );
+            io.to(taskId).emit('message_read', {taskId});
+        }
     });
 
-    socket.on('share_location', (data: {taskId: string; coordinated: [number, number]}) => {
+    socket.on('leave_room', (taskId: string) => {
+        socket.leave(taskId);
+        const userId = userSockets.get(socket.id);
+        if (userId && activeRoomUsers.has(taskId)) {
+            activeRoomUsers.get(taskId)!.delete(userId);
+            if (activeRoomUsers.get(taskId)!.size === 0) {
+                activeRoomUsers.delete(taskId);
+            }
+        }
+    });
+
+    socket.on('share_location', (data: {taskId: string; coordinated: [number, number]})  => {
         io.to(data.taskId).emit('location_update', data.coordinated);
     });
 
     socket.on('send_message', async (data: {taskId: string; senderId: string; text?: string; attachment?: string; audio?: string}) => {
         try {
             const {taskId, senderId, text, attachment, audio} = data;
+            const isRoomActive = activeRoomUsers.get(taskId)?.size && activeRoomUsers.get(taskId)!.size >= 2;
             const message = new Message ({
                 task: taskId,
                 sender: senderId,
                 text,
                 attachment,
-                audio
+                audio,
+                read: isRoomActive ? true : false
             });
             await message.save();
             const populatedMessage = await message.populate('sender', 'name');
@@ -140,6 +169,14 @@ io.on('connection', (socket) => {
             onlineUsers.delete(userId);
             userSockets.delete(socket.id);
             io.emit('user_status_update', {userId, isOnline: false});
+            for (const [taskId, usersSet] of activeRoomUsers.entries()) {
+                if (usersSet.has(userId)) {
+                    usersSet.delete(userId);
+                    if (usersSet.size === 0) {
+                        activeRoomUsers.delete(taskId);
+                    }
+                }
+            }
         }
     });
 });
