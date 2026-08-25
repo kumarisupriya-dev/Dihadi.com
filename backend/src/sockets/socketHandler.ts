@@ -1,54 +1,52 @@
-import {Server, Socket} from 'socket.io';
+import { Server, Socket } from 'socket.io';
 import mongoose from 'mongoose';
 import Message from '../models/Message';
 
-const onlineUsers = new Map<string, string>();
-const userSockets = new Map<string, string>();
-const activeRoomUsers = new Map<string, Set<string>>();
-
+const usersActiveMap = new Map<string, string>();
+const socketIdToUser = new Map<string, string>();
+const engagedChatMembers = new Map<string, Set<string>>();
 export const setupSockets = (io: Server) => {
     io.on('connection', (socket: Socket) => {
-        console.log(`User connected to socket: ${socket.id}`);
+        console.log(`Socket client online: ${socket.id}`);
 
         socket.on('register_active_user', (data: {userId: string, taskId: string}) => {
             const {userId, taskId} = data;
-            onlineUsers.set(userId, socket.id);
-            userSockets.set(socket.id, userId);
+            usersActiveMap.set(userId, socket.id);
+            socketIdToUser.set(socket.id, userId);
             io.to(taskId).emit('user_status_update', {userId, isOnline: true});
         });
 
         socket.on('check_user_online', (data: {targetUserId: string}, callback: (isOnline: boolean) => void) => {
-            const isOnline = onlineUsers.has(data.targetUserId);
+            const isOnline = usersActiveMap.has(data.targetUserId);
             callback(isOnline);
         });
 
-        socket.on('join_room', async(taskId: string) => {
+        socket.on('join_room', async (taskId: string) => {
             socket.join(taskId);
-            console.log(`Socket ${socket.id} joined chat room: ${taskId}`);
 
-            const userId = userSockets.get(socket.id);
+            const userId = socketIdToUser.get(socket.id);
             if (userId) {
-                if (!activeRoomUsers.has(taskId)) {
-                    activeRoomUsers.set(taskId, new Set());
+                if (!engagedChatMembers.has(taskId)) {
+                    engagedChatMembers.set(taskId, new Set());
                 }
-                activeRoomUsers.get(taskId)!.add(userId);
+                engagedChatMembers.get(taskId)!.add(userId);
 
                 await Message.updateMany(
                     {task: taskId, sender: {$ne: userId}, read: false},
                     {$set: {read: true}}
                 );
 
-                io.to(taskId).emit('message_read', {taskId});
+                io.to(taskId).emit('messages_read', {taskId});
             }
         });
 
         socket.on('leave_room', (taskId: string) => {
             socket.leave(taskId);
-            const userId = userSockets.get(socket.id);
-            if (userId && activeRoomUsers.has(taskId)) {
-                activeRoomUsers.get(taskId)!.delete(userId);
-                if (activeRoomUsers.get(taskId)!.size === 0) {
-                    activeRoomUsers.delete(taskId);
+            const userId = socketIdToUser.get(socket.id);
+            if (userId && engagedChatMembers.has(taskId)) {
+                engagedChatMembers.get(taskId)!.delete(userId);
+                if (engagedChatMembers.get(taskId)!.size === 0) {
+                    engagedChatMembers.delete(taskId);
                 }
             }
         });
@@ -61,7 +59,7 @@ export const setupSockets = (io: Server) => {
             try {
                 const {taskId, senderId, text, attachment, audio} = data;
 
-                const isRoomActive = activeRoomUsers.get(taskId)?.size && activeRoomUsers.get(taskId)!.size >= 2;
+                const isRoomActive = engagedChatMembers.get(taskId)?.size && engagedChatMembers.get(taskId)!.size >= 2;
 
                 const message = new Message({
                     task: taskId,
@@ -75,7 +73,7 @@ export const setupSockets = (io: Server) => {
                 const populatedMessage = await message.populate('sender', 'name');
                 io.to(taskId).emit('receive_message', populatedMessage);
             } catch (err) {
-                console.error('Socket message error:', err);
+                console.error('Socket message processing failed:', err);
             }
         });
 
@@ -107,7 +105,7 @@ export const setupSockets = (io: Server) => {
                 ]);
                 io.to(msg.task.toString()).emit('reactions_updated', populatedMsg);
             } catch (err) {
-                console.error('Socket reaction error:', err);
+                console.error('Socket emoji reaction failure:', err);
             }
         });
 
@@ -116,18 +114,17 @@ export const setupSockets = (io: Server) => {
         });
 
         socket.on('disconnect', () => {
-            console.log(`User disconnected: ${socket.id}`);
-            const userId = userSockets.get(socket.id);
+            const userId = socketIdToUser.get(socket.id);
             if (userId) {
-                onlineUsers.delete(userId);
-                userSockets.delete(socket.id);
+                usersActiveMap.delete(userId);
+                socketIdToUser.delete(socket.id);
                 io.emit('user_status_update', {userId, isOnline: false});
 
-                for (const [taskId, usersSet] of activeRoomUsers.entries()) {
+                for (const [taskId, usersSet] of engagedChatMembers.entries()) {
                     if (usersSet.has(userId)) {
                         usersSet.delete(userId);
                         if (usersSet.size === 0) {
-                            activeRoomUsers.delete(taskId);
+                            engagedChatMembers.delete(taskId);
                         }
                     }
                 }
