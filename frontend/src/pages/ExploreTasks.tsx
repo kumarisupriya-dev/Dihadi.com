@@ -167,12 +167,12 @@ export const ExploreTasks: React.FC = () => {
     return (
         <div className="max-w-7xl mx-auto px-6 py-12 flex flex-col h-[calc(100vh-80px)] relative">
             {/* Search filter header */}
-            <div className="bg-slate-900 border border-slate-800 rounded-3xl p-6 shadow-xl mb-8 flex flex-wrap gap-4 items-center justify-between">
+            <div className="bg-slate-900 border border-slate-800 rounded-3xl p-6 shadow-xl mb-8 flex flex-wrap gap-4 items-center justify-between relative">
                 <div className="flex items-center gap-2">
-                    <Navigation className="w-6 h-6 text-brand-500 animate-pulse"/>
+                    <Navigation className="w-6 h-6 txt-brand-500 animate-pulse"/>
                     <div>
                         <h2 className="text-sm font-semibold text-slate-400">Search Radius Location</h2>
-                        <p className="text-white font-bold text-xs">{locationName}</p>
+                        <p className="text-slate-100 font-bold text-xs">{locationName}</p>
                     </div>
                 </div>
                 <div className="flex flex-wrap gap-4 flex-grow max-w-2xl justify-end items-center">
@@ -180,17 +180,16 @@ export const ExploreTasks: React.FC = () => {
                     type="button"
                     onClick={() => setIsFilterOpen(!isFilterOpen)}
                     className={`font-bold py-2 px-4 rounded-xl text-xs transition-all duration-200 flex items-center gap-1.5 border shadow-md ${
-                        isFilterOpen
-                        ? 'bg-brand-500/10 border-brand-500/30 text-brand-400'
-                            : 'bg-slate-850 hover:bg-slate-800 border-slate-750 text-white'
+                        isFilterOpen ? 'bg-brand-500/10 border-brand-500/30 text-brand-400' :
+                            'bg-slate-850 hover:bg-slate-800 border-slate-750 text-slate-100'
                     }`}
                     >
                         <Sliders className="w-4 h-4"/>
-                        {isFilterOpen ? 'Close Filter Sidebar' : 'Filters & Sorting0'}
+                        {isFilterOpen ? 'Close Filter Sidebar' : 'Filters & Sorting'}
                     </button>
                     <button
                     onClick={getBrowserLocation}
-                    className="bg-slate-850 hover:bg-slate-800 border border-slate-750 text-white font-bold py-2 px-4 rounded-xl text-xs transition-colors flex items-center gap-1.5 shadow-sm"
+                    className="bg-slate-850 hover:bg-slate-800 border border-slate-750 text-slate-100 font-bold py-2 px-4 rounded-xl text-xs transition-colors flex items-center gap-1.5 shadow-sm"
                     >
                         <MapPin className="w-4 h-4"/>
                         Refresh GPS
@@ -199,9 +198,9 @@ export const ExploreTasks: React.FC = () => {
             </div>
             {/* Collapsible filters sidebar panel */}
             {isFilterOpen && (
-                <div className="absolute top-36 left-6 bottom-12 w-80 bg-slate-900/95 backdrop-blur border border-slate-800 rounded-3xl p-6 shadow-2xl z-40 flex flex-col justify-between animate-in slide-in-from-left duration-200">
+                <div className="absolute top-full right-6 mt-2 w-80 bg-slate-900/98 backdrop-blur border border-slate-800 rounded-3xl p-6 shadow-2xl z-50 flex flex-col justify-between animate-in slide-in-from-top duration-200">
                     <div className="space-y-6">
-                        <h3 className="text-xs font-bold text-white border-b border-slate-800 pb-2 uppercase tracking-wider">
+                        <h3 className="text-xs font-bold text-slate-100 border-b border-slate-800 pb-2 uppercase tracking-wider">
                             Filter Console
                         </h3>
                         <div className="space-y-1.5">
@@ -209,7 +208,7 @@ export const ExploreTasks: React.FC = () => {
                             <select
                             value={category}
                             onChange={(e) => setCategory(e.target.value)}
-                            className="w-full bg-slate-950 border border-slate-850 focus:border-brand-500 rounded-xl py-2 px-3 text-white text-xs focus:outline-none transition-colors"
+                            className="w-full bg-slate-950 border border-slate-850 focus:border-brand-500 rounded-xl py-2 px-3 text-slate-100 text-xs focus:outline-none transition-colors"
                             >
                                 <option value="">All Categories</option>
                                 <option value="Delivery">Delivery</option>
@@ -245,14 +244,14 @@ export const ExploreTasks: React.FC = () => {
                                 value={minBudget === 0 ? '' : minBudget}
                                 onChange={(e) => setMinBudget(Number(e.target.value))}
                                 placeholder="Min (₹)"
-                                className="w-1/2 bg-slate-950 border border-slate-850 focus:border-emerald-500 rounded-xl py-1.5 px-3 text-white text-xs focus:outline-none"
+                                className="w-1/2 bg-slate-950 border border-slate-850 focus:border-emerald-500 rounded-xl py-1.5 px-3 text-slate-100 text-xs focus:outline-none"
                                 />
                                 <input
                                 type="number"
                                 value={maxBudget === 10000 ? '': maxBudget}
                                 onChange={(e) => setMaxBudget(Number(e.target.value) || 10000)}
                                 placeholder="Max (₹)"
-                                className="w-1/2 bg-slate-950 border border-slate-850 focus:border-emerald-500 rounded-xl py-1.5 px-3 text-white text-xs focus:outline-none"
+                                className="w-1/2 bg-slate-950 border border-slate-850 focus:border-emerald-500 rounded-xl py-1.5 px-3 text-slate-100 text-xs focus:outline-none"
                                 />
                             </div>
                         </div>
@@ -301,7 +300,7 @@ export const ExploreTasks: React.FC = () => {
             <div className="flex-grow grid grid-cols-1 lg:grid-cols-2 gap-8 min-h-[500px]">
                 {/* Left column: Errands list */}
                 <div className="space-y-4 overflow-auto max-h-[550px] pr-2">
-                    <h3 className="text-xl font-bold text-white mb-2 flex items-center gap-2">
+                    <h3 className="text-xl font-bold text-slate-100 mb-2 flex items-center gap-2">
                         <Briefcase className="w-5 h-5 text-indigo-400"/>
                         Available Errands ({filteredAndSortedTasks.length})
                     </h3>
@@ -342,7 +341,7 @@ export const ExploreTasks: React.FC = () => {
                                                 {dist} km away
                                             </span>
                                         </div>
-                                        <h4 className="text-md font-bold text-white leading-snug">{task.title}</h4>
+                                        <h4 className="text-md font-bold text-slate-100 leading-snug">{task.title}</h4>
                                         <p className="text-xs text-slate-400 line-clamp-2">{task.address}</p>
                                         <div className="text-[10px] text-slate-500 flex items-center gap-1.5">
                                             <span>Posted by
@@ -364,7 +363,7 @@ export const ExploreTasks: React.FC = () => {
                                         <span className="text-lg font-black text-emerald-450 bg-emerald-500/5 border border-emerald-500/10 rounded-xl px-3 py-1 shadow-inner">
                                             ₹{task.budget}
                                         </span>
-                                        <button className="bg-slate-800 hover:bg-slate-750 text-white font-bold p-2.5 rounded-xl text-xs transition-colors border border-slate-750 shadow-md">
+                                        <button className="bg-slate-800 hover:bg-slate-750 text-slate-100 font-bold p-2.5 rounded-xl text-xs transition-colors border border-slate-750 shadow-md">
                                             <Eye className="w-4 h-4"/>
                                         </button>
                                     </div>

@@ -1,7 +1,7 @@
 import React, {useState, useEffect} from 'react';
 import {useAuth} from '../context/Authcontext';
 import {apiFetch} from '../utils/api.ts';
-import {ShieldCheck, Upload, AlertCircle, Sparkles, Check, X, ShieldAlert, Scale, Landmark} from 'lucide-react';
+import {ShieldCheck, Upload, AlertCircle, Check, X, ShieldAlert, Scale, Landmark} from 'lucide-react';
 
 interface PendingUser {
     _id: string;
@@ -155,7 +155,7 @@ export const Verification: React.FC = () => {
     if (!user) return null;
 
     return (
-        <div className="max-w-4xl mx-atuo px-6 py-12 space-y-8">
+        <div className="max-w-4xl mx-auto px-6 py-12 space-y-8">
             {error && (
                 <div className="flex items-center gap-2 bg-rose-500/10 border border-rose-500/20 text-rose-455 text-sm p-4 rounded-xl">
                     <AlertCircle className="w-5 h-5 flex-shrink-0"/>
@@ -170,7 +170,7 @@ export const Verification: React.FC = () => {
             )}
             {/* Normal user verification */}
             <div className="bg-slate-900 border border-slate-800 rounded-3xl p-8 shadow-xl text-center max-w-xl mx-auto">
-                <h2 className="text-2xl font-black text-white mb-2 flex items-center justify-center gap-2">
+                <h2 className="text-2xl font-black text-slate-100 mb-2 flex items-center justify-center gap-2">
                     <ShieldCheck className="w-8 h-8 text-brand-500"/>
                     Identity verification
                 </h2>
@@ -206,7 +206,7 @@ export const Verification: React.FC = () => {
                 {user.verificationStatus === 'pending' && (
                     <div className="p-6 bg-amber-500/5 border border-amber-500/10 rounded-2xl space-y-2">
                         <ShieldAlert className="w-8 h-8 text-amber-500 mx-auto animate-pulse"/>
-                        <h4 className="text-sm font-bold text-white">Review in Progress</h4>
+                        <h4 className="text-sm font-bold text-slate-100">Review in Progress</h4>
                         <p className="text-xs text-slate-400">
                             Your document has been submitted and is currently being reviewed by administrators.
                         </p>
@@ -215,7 +215,7 @@ export const Verification: React.FC = () => {
                 {user.verificationStatus === 'verified' && (
                     <div className="p-6 bg-emerald-500/5 border border-emerald-500/10 rounded-2xl space-y-2">
                         <ShieldCheck className="w-8 h-8 text-emerald-450 mx-auto"/>
-                        <h4 className="text-sm font-bold text-white">Verified Account</h4>
+                        <h4 className="text-sm font-bold text-slate-100">Verified Account</h4>
                         <p className="text-xs text-slate-450">
                             Your profile is verified. You now have a trusted earner badge displayed.
                         </p>
@@ -227,8 +227,8 @@ export const Verification: React.FC = () => {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
                     <div className="bg-slate-900 border border-slate-800 rounded-3xl p-6 shadow-xl relative overflow-hidden flex items-center justify-between">
                         <div className="space-y-1">
-                            <span className="text-xs text-slate-455 uppercase font-smeibold block">Total Revenue Collected (5% Fee)</span>
-                            <span className="text-3xl font-black text-white">₹{treasuryStats.totalFeesCollected.toFixed(2)}</span>
+                            <span className="text-xs text-slate-450 uppercase font-smeibold block">Total Revenue Collected (5% Fee)</span>
+                            <span className="text-3xl font-black text-slate-100">₹{treasuryStats.totalFeesCollected.toFixed(2)}</span>
                             <p className="text-[10px] text-slate-500">Platform earnings from completed errands</p>
                         </div>
                         <div className="bg-emerald-500/10 p-4 rounded-2xl border border-emerald-500/20 text-emerald-450 flex-shrink-0">
@@ -237,8 +237,8 @@ export const Verification: React.FC = () => {
                     </div>
                     <div className="bg-slate-900 border border-slate-800 rounded-3xl p-6 shadow-xl relative overflow-hidden flex items-center justify-between">
                         <div className="space-y-1">
-                            <span className="text-xs text-slate-455 uppercase font-semibold block">Total Escrow Funds Active</span>
-                            <span className="text-3xl font-black text-white">₹{treasuryStats.activeEscrowAmount.toFixed(2)}</span>
+                            <span className="text-xs text-slate-450 uppercase font-semibold block">Total Escrow Funds Active</span>
+                            <span className="text-3xl font-black text-slate-100">₹{treasuryStats.activeEscrowAmount.toFixed(2)}</span>
                             <p className="text-[10px] text-slate-500">Frozen funds for in-progress and disputed errands</p>
                         </div>
                         <div className="bg-indigo-500/10 p-4 rounded-2xl border border-indigo-500/20 text-indigo-400 flex-shrink-0">
@@ -250,8 +250,7 @@ export const Verification: React.FC = () => {
             {/* Admin verification queue */}
             {user.isAdmin && (
                 <div className="bg-slate-900 border border-slate-800 rounded-3xl p-8 shadow-xl space-y-6">
-                    <h3 className="text-lg font-black text-white border-b border-slate-800 pb-2 flex items-center gap-2">
-                        <Sparkles className="w-5 h-5 text-amber-400"/>
+                    <h3 className="text-lg font-black text-slate-100 border-b border-slate-800 pb-2">
                         Admin Verification Queue ({pendingQueue.length})
                     </h3>
                     {loadingQueue ? (
@@ -266,7 +265,7 @@ export const Verification: React.FC = () => {
                                 <div key={item._id} className="bg-slate-950/40 border border-slate-850 p-4 rounded-2xl flex flex-col gap-3">
                                     <div className="flex justify-between items-start">
                                         <div>
-                                            <h4 className="font-bold text-xs text-white leading-none mb-1">{item.name}</h4>
+                                            <h4 className="font-bold text-xs text-slate-100 leading-none mb-1">{item.name}</h4>
                                             <p className="text-[10px] text-slate-500">{item.email}</p>
                                         </div>
                                         <div className="flex gap-2">
@@ -304,9 +303,8 @@ export const Verification: React.FC = () => {
             )}
             {user.isAdmin && (
                 <div className="bg-slate-900 border border-slate-800 rounded-3xl p-8 shadow-xl space-y-6 mt-8">
-                    <h3 className="text-lg font-black text-white border-b border-slate-800 pb-2 flex items-center gap-2">
-                        <Scale className="w-5 h-5 text-indigo-400"/>
-                        Admin Escrow Disputes Queue ({disputedQueue.length})
+                    <h3 className="text-lg font-black text-slate-100 border-b border-slate-800 pb-2">
+                        Admin Escrow Queue ({disputedQueue.length})
                     </h3>
                     {loadingDisputes ? (
                         <div className="flex items-center justify-center py-10">
@@ -320,7 +318,7 @@ export const Verification: React.FC = () => {
                                 <div key={task._id} className="bg-slate-950/40 border border-slate-850 p-5 rounded-2xl flex flex-col gap-4">
                                     <div>
                                         <span className="text-[10px] text-indigo-400 font-bold bg-indigo-500/10 border border-indigo-500/20 px-2 py-0.5 rounded uppercase block w-max mb-1">Frozen Escrow: ₹{task.budget}</span>
-                                        <h4 className="font-extrabold text-sm text-white">{task.title}</h4>
+                                        <h4 className="font-extrabold text-sm text-slate-100">{task.title}</h4>
                                         <div className="text-[10px] text-slate-500 mt-1 space-y-0.5">
                                             <p>Client: <span className="text-slate-300 font-semibold">{task.assignedTasker.name}</span>({task.assignedTasker.email})</p>
                                         </div>
