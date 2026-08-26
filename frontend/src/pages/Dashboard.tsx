@@ -37,7 +37,7 @@ export const Dashboard: React.FC = () => {
         } catch (err: any) {
             setError(err.message || 'Failed to load dashboard data.');
         } finally {
-            setLoading(true);
+            setLoading(false);
         }
     };
 
