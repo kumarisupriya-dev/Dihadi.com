@@ -124,7 +124,9 @@ if (!user) return null;
                        currentRole === 'client' ? 'bg-indigo-600' : 'bg-emerald-600'
                    }`}
                    >
-                       <span className="absolute left-3 text-xs font-bold text-white uppercase pointer-events-none">
+                       <span className={`absolute text-[10px] font-black text-white uppercase pointer-events-none transition-all duration-300 ${
+                           currentRole === 'client' ? 'left-4' : 'right-4'
+                       }`}>
                            {currentRole === 'client' ? 'Client Mode' : 'Tasker Mode'}
                        </span>
                        <span className={`inline-block w-7 h-7 transform bg-white rounded-full transition-transform duration-300 shadow-md ${
