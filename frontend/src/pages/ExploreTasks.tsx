@@ -198,7 +198,7 @@ export const ExploreTasks: React.FC = () => {
             </div>
             {/* Collapsible filters sidebar panel */}
             {isFilterOpen && (
-                <div className="absolute top-full right-6 mt-2 w-80 bg-slate-900/98 backdrop-blur border border-slate-800 rounded-3xl p-6 shadow-2xl z-50 flex flex-col justify-between animate-in slide-in-from-top duration-200">
+                <div className="absolute top-[136px] right-6 mt-2 w-80 bg-slate-900/98 backdrop-blur border border-slate-800 rounded-3xl p-6 shadow-2xl z-50 flex flex-col justify-between animate-in slide-in-from-top duration-200">
                     <div className="space-y-6">
                         <h3 className="text-xs font-bold text-slate-100 border-b border-slate-800 pb-2 uppercase tracking-wider">
                             Filter Console
