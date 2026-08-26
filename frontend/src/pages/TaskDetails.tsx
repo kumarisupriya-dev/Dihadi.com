@@ -742,7 +742,7 @@ export const TaskDetails: React.FC = () => {
                                         <h4 className="font-bold text-slate-100 text-lg flex items-center gap-1.5">
                                             <button
                                             onClick={() => navigate(`/profile/${task.client._id}`)}
-                                            className="hover:text-brand-400 hover:underline transition-colors text-lfet"
+                                            className="hover:text-brand-400 hover:underline transition-colors text-left"
                                             >
                                                 {task.client.name}
                                             </button>

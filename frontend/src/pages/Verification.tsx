@@ -227,7 +227,7 @@ export const Verification: React.FC = () => {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
                     <div className="bg-slate-900 border border-slate-800 rounded-3xl p-6 shadow-xl relative overflow-hidden flex items-center justify-between">
                         <div className="space-y-1">
-                            <span className="text-xs text-slate-450 uppercase font-smeibold block">Total Revenue Collected (5% Fee)</span>
+                            <span className="text-xs text-slate-450 uppercase font-semibold block">Total Revenue Collected (5% Fee)</span>
                             <span className="text-3xl font-black text-slate-100">₹{treasuryStats.totalFeesCollected.toFixed(2)}</span>
                             <p className="text-[10px] text-slate-500">Platform earnings from completed errands</p>
                         </div>

@@ -230,7 +230,7 @@ export const ExploreTasks: React.FC = () => {
                             max="100"
                             value={radius}
                             onChange={(e) => setRadius(e.target.value)}
-                            className="w-full h-1.5 bg-slate-950 rounded-lg apperance-none cursor-pointer accent-brand-500"
+                            className="w-full h-1.5 bg-slate-950 rounded-lg appearance-none cursor-pointer accent-brand-500"
                             />
                         </div>
                         <div className="space-y-2">

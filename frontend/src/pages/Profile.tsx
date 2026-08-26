@@ -157,7 +157,7 @@ export const Profile: React.FC = () => {
                             {profile.rating > 0 ? profile.rating.toFixed(1) : '—'}
                             {profile.rating > 0 && <Star className="w-6 h-6 text-amber-400 fill-amber-400"/>}
                         </span>
-                        <p className="text-xs text-slate-450 uppercase font-smeibold mt-1">Average Rating</p>
+                        <p className="text-xs text-slate-450 uppercase font-semibold mt-1">Average Rating</p>
                     </div>
                     <div className="text-center">
                         <span className="text-4xl font-black text-slate-100">

@@ -51,8 +51,8 @@ export const setupSockets = (io: Server) => {
             }
         });
 
-        socket.on('share_location', (data: {taskId: string; coordinated: [number, number]}) => {
-            io.to(data.taskId).emit('location_update', data.coordinated);
+        socket.on('share_location', (data: {taskId: string; coordinates: [number, number]}) => {
+            io.to(data.taskId).emit('location_update', data.coordinates);
         });
 
         socket.on('send_message', async (data: {taskId: string; senderId: string; text?: string; attachment?: string; audio?: string}) => {
