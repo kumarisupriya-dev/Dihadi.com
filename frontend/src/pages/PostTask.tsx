@@ -76,7 +76,7 @@ export const PostTask: React.FC = () => {
             <div className="bg-slate-900 border border-slate-800 rounded-3xl p-8 shadow-2xl">
                 <div className="flex items-center gap-3 mb-6">
                     <Briefcase className="w-8 h-8 text-brand-500"/>
-                    <h2 className="text-3xl font-semibold text-white">Post a New Errand</h2>
+                    <h2 className="text-3xl font-semibold text-slate-100">Post a New Errand</h2>
                 </div>
                 <p className="text-slate-400 mb-8">
                     Provide the details of the job. Local students and helpers will see this and place bids.
@@ -99,7 +99,7 @@ export const PostTask: React.FC = () => {
                                 value={title}
                                 onChange={(e) => setTitle(e.target.value)}
                                 placeholder="e.g. Clean & service Split AC unit"
-                                className="w-full bg-slate-950 border border-slate-850 focus:border-brand-500 rounded-xl py-3 pl-12 pr-4 text-white focus:outline-none transition-colors duration-200 shadow-inner animate-pulse-once"
+                                className="w-full bg-slate-950 border border-slate-850 focus:border-brand-500 rounded-xl py-3 pl-12 pr-4 text-slate-100 focus:outline-none transition-colors duration-200 shadow-inner animate-pulse-once"
                                 />
                             </div>
                         </div>
@@ -108,7 +108,7 @@ export const PostTask: React.FC = () => {
                             <select
                             value={category}
                             onChange={(e) => setCategory(e.target.value)}
-                            className="w-full bg-slate-950 border border-slate-850 focus:border-brand-500 rounded-xl py-3 px-4 text-white focus:outline-none transition-colors duration-200 shadow-inner"
+                            className="w-full bg-slate-950 border border-slate-850 focus:border-brand-500 rounded-xl py-3 px-4 text-slate-100 focus:outline-none transition-colors duration-200 shadow-inner"
                             >
                                 {CATEGORIES.map((cat) => (
                                     <option key={cat} value={cat}>
@@ -128,7 +128,7 @@ export const PostTask: React.FC = () => {
                             value={description}
                             onChange={(e) => setDescription(e.target.value)}
                             placeholder="Explain what needs to be done. Be specific so taskers can bid accurately."
-                            className="w-full bg-slate-950 border border-slate-850 focus:border-brand-500 rounded-xl py-3 pl-12 pr-4 text-white focus:outline-none transition-colors duration-200 shadow-inner resize-none"
+                            className="w-full bg-slate-950 border border-slate-850 focus:border-brand-500 rounded-xl py-3 pl-12 pr-4 text-slate-100 focus:outline-none transition-colors duration-200 shadow-inner resize-none"
                             />
                         </div>
                     </div>
@@ -144,7 +144,7 @@ export const PostTask: React.FC = () => {
                                 value={budget}
                                 onChange={(e) => setBudget(e.target.value)}
                                 placeholder="e.g. 500"
-                                className="w-full bg-slate-950 border border-slate-850 focus:border-brand-500 rounded-xl py-3 pl-12 pr-4 text-white focus:outline-none transition-colors duration-200 shadow-inner"
+                                className="w-full bg-slate-950 border border-slate-850 focus:border-brand-500 rounded-xl py-3 pl-12 pr-4 text-slate-100 focus:outline-none transition-colors duration-200 shadow-inner"
                                 />
                             </div>
                         </div>
@@ -158,7 +158,7 @@ export const PostTask: React.FC = () => {
                                 value={address}
                                 onChange={(e) => setAddress(e.target.value)}
                                 placeholder="e.g. Flat 304, Sector 15, Rohini"
-                                className="w-full bg-slate-950 border border-slate-850 focus:border-brand-500 rounded-xl py-3 pl-12 pr-4 text-white focus:outline-none transition-colors duration-200 shadow-inner"
+                                className="w-full bg-slate-950 border border-slate-850 focus:border-brand-500 rounded-xl py-3 pl-12 pr-4 text-slate-100 focus:outline-none transition-colors duration-200 shadow-inner"
                                 />
                             </div>
                         </div>

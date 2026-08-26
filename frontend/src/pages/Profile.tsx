@@ -129,7 +129,7 @@ export const Profile: React.FC = () => {
                         {profile.name.charAt(0).toUpperCase()}
                     </div>
                     <div className="space-y-2">
-                        <h1 className="text-3xl font-black text-white flex items-center justify-center md:justify-start gap-2">
+                        <h1 className="text-3xl font-black text-slate-100 flex items-center justify-center md:justify-start gap-2">
                             {profile.name}
                             {profile.isVerified && <ShieldCheck className="w-7 hg-7 text-emerald-450 fill-emerald-450/10"/>}
                         </h1>
@@ -153,14 +153,14 @@ export const Profile: React.FC = () => {
                 {/* User ratings dashboard widget */}
                 <div className="flex gap-8 border-t md:border-t-0 md:border-l border-slate-800 pt-6 md:pt-0 md:pl-8 w-full md:w-auto justify-around">
                     <div className="text-center">
-                        <span className="text-4xl font-black text-white flex items-center justify-center gap-1">
+                        <span className="text-4xl font-black text-slate-100 flex items-center justify-center gap-1">
                             {profile.rating > 0 ? profile.rating.toFixed(1) : '—'}
                             {profile.rating > 0 && <Star className="w-6 h-6 text-amber-400 fill-amber-400"/>}
                         </span>
                         <p className="text-xs text-slate-450 uppercase font-smeibold mt-1">Average Rating</p>
                     </div>
                     <div className="text-center">
-                        <span className="text-4xl font-black text-white">
+                        <span className="text-4xl font-black text-slate-100">
                             {profile.reviewCount}
                         </span>
                         <p className="text-xs text-slate-450 uppercase font-semibold mt-1">Total Reviews</p>
@@ -170,7 +170,7 @@ export const Profile: React.FC = () => {
             {reviews.length > 0 && (
                 <div className="bg-slate-900 border border-slate-800 rounded-3xl p-8 shadow-xl grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
                     <div>
-                        <h3 className="text-md font-bold text-white mb-4">Rating Breakdown</h3>
+                        <h3 className="text-md font-bold text-slate-100 mb-4">Rating Breakdown</h3>
                         <div className="space-y-2">
                             {([5, 4, 3, 2, 1] as const).map((stars) => {
                                 const count = starCounts[stars];
@@ -182,14 +182,14 @@ export const Profile: React.FC = () => {
                                         <div className="flex-grow bg-slate-950 rounded-full h-2.5 overflow-hidden border border-slate-850">
                                             <div className="bg-amber-400 h-full rounded-full transition-all duration-500" style={{width: `${percent}%`}}/>
                                         </div>
-                                        <span className="w-8 text-left font-bold text-white">{count}</span>
+                                        <span className="w-8 text-left font-bold text-slate-100">{count}</span>
                                     </div>
                                 );
                             })}
                         </div>
                     </div>
                     <div className="text-center bg-slate-950/20 border border-slate-850 p-6 rounded-2xl flex flex-col justify-center h-full">
-                        <span className="text-5xl font-black text-white">{profile.rating > 0 ? profile.rating.toFixed(1) : '—'}</span>
+                        <span className="text-5xl font-black text-slate-100">{profile.rating > 0 ? profile.rating.toFixed(1) : '—'}</span>
                         <div className="flex items-center justify-center gap-0.5 text-amber-400 mt-2">
                             {Array.from({length: 5}).map((_, index) => (
                                 <Star
@@ -204,7 +204,7 @@ export const Profile: React.FC = () => {
             )}
             {/* Historical reviews feed section */}
             <div className="bg-slate-900 border border-slate-800 rounded-3xl p-8 shadow-xl space-y-6">
-                <h3 className="text-xl font-bold text-white border-b border-slate-800 pb-2 flex items-center gap-2">
+                <h3 className="text-xl font-bold text-slate-100 border-b border-slate-800 pb-2 flex items-center gap-2">
                     <MessageSquare className="w-5 h-5 text-indigo-400"/>
                     Review History Feed
                 </h3>
@@ -222,7 +222,7 @@ export const Profile: React.FC = () => {
                                         {/* Clickable reviewer name */}
                                         <button
                                         onClick={() => navigate(`/profile/${rev.reviewer._id}`)}
-                                        className="font-bold text-sm text-white hover:text-brand-400 transition-colors text-left"
+                                        className="font-bold text-sm text-slate-100 hover:text-brand-400 transition-colors text-left"
                                         >
                                             {rev.reviewer.name}
                                         </button>

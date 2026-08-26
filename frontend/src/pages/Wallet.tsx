@@ -135,7 +135,7 @@ window.onload = function() {window.print(); window.print(); window.close();}
 
     return (
         <div className="max-w-6xl mx-auto px-6 py-12">
-            <h1 className="text-3xl font-black text-white mb-8 flex items-center gap-3">
+            <h1 className="text-3xl font-black text-slate-100 mb-8 flex items-center gap-3">
                 <WalletIcon className="w-8 h-8 text-emerald-400"/>
                 My Wallet Dashboard
             </h1>
@@ -158,12 +158,12 @@ window.onload = function() {window.print(); window.print(); window.close();}
                     <div className="bg-slate-900 border border-slate-800 rounded-3xl p-6 shadow-xl text-center relative overflow-hidden">
                         <div className="absolute top-0 right-0 w-24 h-24 bg-emerald-500/5 rounded-full blur-xl translate-y-4"></div>
                         <span className="text-xs text-slate-450 uppercase font-semibold block mb-1">Available Balance</span>
-                        <span className="text-4xl  font-black text-white">₹{user.walletBalance.toFixed(2)}</span>
+                        <span className="text-4xl  font-black text-slate-100">₹{user.walletBalance.toFixed(2)}</span>
                         <p className="text-xs text-slate-500 mt-4 italic">Simulated Escrow Wallet Mode</p>
                     </div>
                     {/* Deposit Form */}
                 <div className="bg-slate-900 border-slate-800 rounded-3xl p-6 shadow-xl">
-                    <h3 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
+                    <h3 className="text-lg font-bold text-slate-100 mb-4 flex items-center gap-2">
                         <ArrowDownCircle className="w-5 h-5 text-emerald-400" />
                         Add Simulated Funds
                     </h3>
@@ -175,7 +175,7 @@ window.onload = function() {window.print(); window.print(); window.close();}
                         value={depositAmount}
                         onChange={(e) => setDepositAmount(e.target.value)}
                         placeholder="Enter deposit amount (₹)"
-                        className="w-full bg-slate-950 border border-slate-850 focus:border-emerald-500 rounded-xl py-2.5 px-4 text-white text-sm focus:outline-none transition-colors duration-200"/>
+                        className="w-full bg-slate-950 border border-slate-850 focus:border-emerald-500 rounded-xl py-2.5 px-4 text-slate-100 text-sm focus:outline-none transition-colors duration-200"/>
                     <button
                         type="submit"
                         disabled={submitting}
@@ -186,7 +186,7 @@ window.onload = function() {window.print(); window.print(); window.close();}
                 </div>
                     {/* Withdraw Form */}
                     <div className="bg-slate-900 border-slate-800 rounded-3xl p-6 shadow-xl">
-                        <h3 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
+                        <h3 className="text-lg font-bold text-slate-100 mb-4 flex items-center gap-2">
                             <ArrowUpCircle className="w-5 h-5 text-rose-400" />
                             withdraw funds
                         </h3>
@@ -198,7 +198,7 @@ window.onload = function() {window.print(); window.print(); window.close();}
                                 value={withdrawAmount}
                                 onChange={(e) => setWithdrawAmount(e.target.value)}
                                     placeholder="enter withdrawl amount (₹)"
-                                    className="w-full bg-slate-950 border border-slate-850 focus:border-rose-500 rounded-xl py-2.5 px-4 text-white text-sm focus:outline-none transition-colors duration-200"/>
+                                    className="w-full bg-slate-950 border border-slate-850 focus:border-rose-500 rounded-xl py-2.5 px-4 text-slate-100 text-sm focus:outline-none transition-colors duration-200"/>
                                     <button
                                     type="submit"
                                     disabled={submitting}
@@ -212,7 +212,7 @@ window.onload = function() {window.print(); window.print(); window.close();}
             <div className="lg:col-span-2">
                 <div className="bg-slate-900 border border-slate-800 rounded-3xl p-6 shadow-xl h-full flex flex-col">
                     <div className="flex flex-wrap items-center justify-between gap-4 mb-6">
-                        <h3 className="text-xl font-bold text-white flex items-center gap-2">
+                        <h3 className="text-xl font-bold text-slate-100 flex items-center gap-2">
                             <History className="w-5 h-5 text-indigo-400"/>
                             Transaction Ledger History
                         </h3>
@@ -258,7 +258,7 @@ window.onload = function() {window.print(); window.print(); window.close();}
                                     className="flex items-center justify-between bg-slate-950/40 border border-slate-850 p-4 rounded-2xl text-sm hover:border-slate-800 transition-colors"
                                     >
                                         <div className="flex flex-col gap-1 pr-4">
-                                            <span className="text-white font-bold">{tx.description}</span>
+                                            <span className="text-slate-100 font-bold">{tx.description}</span>
                                             <span className="text-[10px] text-slate-500">
                                                 {new Date(tx.createdAt).toLocaleString()}
                                             </span>
@@ -294,15 +294,15 @@ window.onload = function() {window.print(); window.print(); window.close();}
                         <div className="border-t border-b border-slate-800 py-4 space-y-3">
                             <div className="flex justify-between text-xs">
                                 <span className="text-slate-455">Receipt Id:</span>
-                                <span className="font-mono text-white text-right break-all ml-4">{activeReceipt._id}</span>
+                                <span className="font-mono text-slate-100 text-right break-all ml-4">{activeReceipt._id}</span>
                             </div>
                             <div className="flex justify-between text-xs">
                                 <span className="text-slate-455">Created Date:</span>
-                                <span className="text-white font-bold">{new Date(activeReceipt.createdAt).toLocaleString()}</span>
+                                <span className="text-slate-100 font-bold">{new Date(activeReceipt.createdAt).toLocaleString()}</span>
                             </div>
                             <div className="flex justify-between text-xs">
                                 <span className="text-slate-455">Category:</span>
-                                <span className="text-white uppercase font-bold">{activeReceipt.type.replace('_', ' ')}</span>
+                                <span className="text-slate-100 uppercase font-bold">{activeReceipt.type.replace('_', ' ')}</span>
                             </div>
                             <div className="flex justify-between text-xs">
                                 <span className="text-slate-455 font-bold">Total Amount:</span>
