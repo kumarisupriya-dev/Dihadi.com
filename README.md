@@ -10,9 +10,9 @@ Dihadi.com solves this by introducing a transparent, escrow-backed workflow for 
 
 ### Screenshots
 
-![Dashboard Overview](img.png)
+![img_2.png](img_2.png)
 
-![Errand Details and Live Map](img_1.png)
+![img_3.png](img_3.png)
 
 ## Getting Started
 
