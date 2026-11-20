@@ -1,85 +1,93 @@
 # Dihadi.com
 
-## Overview
-Dihadi.com is a secure, hyper-local errand-running marketplace designed to connect local clients with verified taskers (runners) in their vicinity. The platform features interactive mapping, live GPS location tracking, secure escrow payments, real-time chat rooms with media attachments, emoji reactions, voice recording messages, and an interactive FAQ assistant chatbot.
+A hyper-local errand marketplace and escrow-protected task platform connecting local clients with nearby earners.
 
-Basically, if you need a quick errand done (like delivery, cleaning, or tech help), you can post it here. Taskers nearby can bid, you select the best offer, hire them securely, and track their progress live on map.
+## Description
 
-## Features
-**Secure Escrow Payments & Wallet Ledger:**
-Client deposit task budgets directly into a secure wallet escrow upon hiring. Once the job is done, the client confirms completion to release funds. To maintain the marketplace, the platform automatically deducts a 5% commission fee from the takser's payout, directing it ot the system treasury. Users can access transaction history classifications (Deposits, Withdrawals, Escrow) and print digital invoice receipts.
+Getting quick, practical help for everyday tasks—such as picking up medicines, delivering packages across town, home cleaning, or fixing electrical and AC issues—often leads to chaotic exchanges in unorganized social media groups, dealing with strangers without background checks, or arguing over cash payments without guarantees.
 
-**Verification Queue & Dispute Resolution:**
-Taskers can upload ID verification documents to earn a verified status badge. If a tasker completes a job, they upload photo proof of completion. If the client is unsatisfied, they can freeze funds in escrow by raising a dispute. Admins review disputes and verification documents via dedicated queues in the dashboard.
+Dihadi.com solves this by introducing a transparent, escrow-backed workflow for hyper-local tasks. Clients post errands with their exact location, requirements, and budget. Nearby taskers explore opportunities on an interactive Leaflet map and place bids. Once a tasker is accepted, the client's payment is held securely in platform escrow, the earner shares live GPS location updates while on the move, and both parties communicate through real-time chat with photo proofs and voice notes. Payments are released only after the client approves the completed work, while an admin dispute queue protects both sides.
 
-**Interactive Leaflet Maps & Live GPS Tracking:**
-Leaflet maps display task locations dynamically. Hired taskers can activate "Live Location Sharing" form their console, allowing the client to watch a green earner pin move across their map in real-time.
+### Screenshots
 
-**Advanced Explorer Filters & Sorting:**
-A sliding glassmorphic sidebar console lets users search for errands. It includes an HTML5 GPS radius slider (1km to 100km), budget sliders, and options to sort listings instantly by newest, highest budget, or nearest distance. Promoted errands (clients pay ₹50 to promote) are pinned to the top of list feeds with glowing neon borders.
+![Dashboard Overview](img.png)
 
-**Live Chat with Media, Reactions & Indicators:**
-Connected chat feeds support real-time communication. Taskers and clients can send text messages, upload image attachments, record/send voice audio clips (using browser MediaRecorder), send message history keywords, see live typing status indicators, react to individual messages with emojis, and view real-time Whatsapp-style read receipt checkmarks (single gray check for sent, double blue check for read).
+![Errand Details and Live Map](img_1.png)
 
-**Dihadi AI Assistant Chatbot:**
-A floating conversational drawer widget sits globally in the bottom-right corner of the layout. Users can type questions or click quick-help chips to get answers from the AI Chatbot about payment escrows, system fees, verification, and errand promotions.
+## Getting Started
 
-## Known Bugs & Limitations
-**Mobile Layout Shifts:**
-The application layout is optimized primarily for desktop and tablet screens. Minor container overflows and responsiveness issues may occur on small mobile viewports.
+### Dependencies
 
-**Leaflet Marker Anchor Offsets:**
-Leaflet map pins may occasionally shift slightly during fast viewport resets in developer mode before snapping back to their correct coordinates.
+* **Node.js:** v18.0.0 or higher (v20+ recommended)
+* **npm:** v9.0.0 or higher
+* **Operating System:** Windows, macOS, or Linux
+* **Browser:** Any modern browser supporting Geolocation and Audio Recording (Chrome, Edge, Firefox, Brave)
+* **Database:** Free [MongoDB Atlas](https://www.mongodb.com/atlas) cluster
 
-**Audio Recorder Permissions:**
-If microphone access is denied by browser settings, clicking the record trigger fails silently without prompting (mitigated by reloading the page and allowing mic access).
+### Installing
 
-## Tech Stack
-#### Frontend:
-* React (Vite) with TypeScript
-* Tailwind CSS (Theme toggling & layout design)
-* Leaflet API (Map rendering & market placements)
-* Socket.io-client (Real-time tracking, chat message events, and status updates)
-* React Router DOM (Navigation and private routes)
+1. Clone the repository:
+```bash
+git clone https://github.com/Supriya-Kumari/Dihadi.com.git
+cd Dihadi.com
+```
 
-#### Backend:
-* Node.js & Express (API Routing & REST endpoints)
-* MongoDB Atlas (Cloud Database cluster)
-* Mongoose (Data modeling & schemas)
-* Socket.io (Socket channels & status relays)
-* JWT (Security tokens and authorization guards)
+2. Install backend dependencies:
+```bash
+cd backend
+npm install
+```
 
-## How to use?
-1. **Sign Up / Log In:** Create an account on the homepage. Secure credentials will be validated and uou will be routed to your dashboard.
-2. **Post and Errand:** Click "Post Task". Enter a title, description, budget, address location coordinates, and category.
-3. **Hire a Tasker:** If you are the client, review bids placed on your errand. You can click to counter-offer task budgets or accept bids to hire. Once accepted, the budget is moved to escrow.
-4. **Chat & Track Live:** Open the active chat pane to converse with the hired runner. Watch their GPS marker update live on the map as they complete the errand.
-5. **Verify & Release:** Once the runner uploads photo proof, verify the work. Release the locked escrow funds or raise a dispute if there are issues.
-6. **Rate & Review:** Submit feedback comments using the interactive golden stars rating selector. Category skill badges (e.g. "Tech Guru") are automatically awarded toi taksers who hit milestones.
+3. Install frontend dependencies:
+```bash
+cd ../frontend
+npm install
+```
 
-## How to run locally
-1. **Clone the repository:**
-   git clone https://github.com/Supriya-Kumari/Dihadi.com.git
-2. **Install dependencies:**
-* In the frontend directory: npm install
-* In the backend directory: npm install
-3. **Environment Configuration: Create a .env file in the backend directory:**
-   PORT=5000
-   MONGO_URI=your_mongodb_atlas_connection_string
-   JWT_SECRET=your_jwt_secret_key
-4. **Run the Application:** 
-* Terminal 1 (Backend): npm run dev
-* Terminal 2 (Frontend): npm run dev
+4. Configure environment variables:
+Create a `.env` file in the `backend/` directory:
+```env
+PORT=5000
+MONGO_URI=your_mongodb_atlas_connection_string
+JWT_SECRET=your_jwt_secret_key
+```
 
-## AI Usage 
-* Filters & Map Synced Logic: Assisted in writing client-side geospatial distance math equations (Haversine formula) to sort tasks relative to live GPS points.
-* Docs & Deployment: Took some help in writing readme and in deployment.
+### Executing program
 
-## Future Plans 
-* Direct Bank Payouts: Integrate stripe connect to automate tasker withdrawals from platform wallets directly to bank accounts.
-* Notifications Emails: Connect Nodemailer to dispatch confirmation receipts and dispute updates automatically to user mailboxes.
-* Mobile Port: Port the React frontend into React Native to release native iOS and Android apps.
+1. Run the backend server:
+```bash
+cd backend
+npm run dev
+```
 
-## Screenshots of the Project
-![img.png](img.png)
-![img_1.png](img_1.png)
+2. Run the frontend development server:
+```bash
+cd frontend
+npm run dev
+```
+
+3. Open your browser and navigate to:
+```text
+http://localhost:5173
+```
+
+4. Build and run production build:
+```bash
+# Frontend
+npm run build
+npm run preview
+
+# Backend
+npm run build
+npm start
+```
+
+## Help
+
+* **Location Permission Not Prompting:** If the radius slider or errand locator does not detect your coordinates, verify that location access is allowed in your browser settings (`chrome://settings/content/location`) and that the site is served over `localhost` or HTTPS.
+* **Microphone Access for Voice Notes:** If audio recording fails in the chat console, check browser permissions for microphone input. Reloading the page initializes the browser MediaRecorder API.
+* **Database Connection Errors:** Ensure your current IP is whitelisted under Network Access in MongoDB Atlas (`0.0.0.0/0` for cloud deployment) and that the cluster is in an active (unpaused) state.
+
+## License
+
+This project is licensed under the MIT License - see the [LICENSE.md](LICENSE.md) file for details.
